@@ -1,0 +1,9 @@
+{% load i18n %}
+{% load account_tags %}
+{% load pagination_tags %}
+{% load humanize %}
+
+{% for entry in feed.entries.all %}
+  <hr />
+  [{{ entry.header_to_html|safe }}] {{ entry.to_html|safe }}
+{% endfor %}
