@@ -16,8 +16,6 @@ class ObjFeed(django.db.models.Model, fcdjangoutils.modelhelpers.SubclasModelMix
             if cls.__name__ != 'ObjFeed':
                 django.db.models.signals.post_save.connect(cls.obj_post_save, sender=cls.owner.field.rel.to)
 
-#    posted_at = django.db.models.DateTimeField(auto_now=True)
-
     @classmethod
     def obj_post_save(cls, sender, instance, **kwargs):
         # Try around this as OneToOneField are stupid and can't handle null in a sensible way
@@ -60,6 +58,10 @@ class UserFeedSubscription(ObjFeedSubscription):
 
 # Feed entries
 
+class ObjFeedEntryManager(django.db.models.Manager):
+    def get_query_set(self):
+        return django.db.models.Manager.get_query_set(self).order_by("posted_at")
+
 class ObjFeedEntry(django.db.models.Model, fcdjangoutils.modelhelpers.SubclasModelMixin):
     class __metaclass__(django.db.models.Model.__metaclass__):
         def __init__(cls, *arg, **kw):
@@ -67,15 +69,17 @@ class ObjFeedEntry(django.db.models.Model, fcdjangoutils.modelhelpers.SubclasMod
             if cls.__name__ != 'ObjFeedEntry':
                 django.db.models.signals.post_save.connect(cls.obj_post_save, sender=cls.obj.field.rel.to)
 
-#    posted_at = django.db.models.DateTimeField(auto_now=True)
+    objects = ObjFeedEntryManager()
+
+    posted_at = django.db.models.DateTimeField(auto_now=True)
     feed = django.db.models.ForeignKey(ObjFeed, related_name="entries")
     author = django.db.models.ForeignKey(django.contrib.auth.models.User, related_name="feed_postings")
 
     @classmethod
     def obj_post_save(cls, sender, instance, **kwargs):
-        if instance.feed_entry is not None:
+        # Maybe we want changes to objects too? Then uncomment this...
+        if instance.feed_entry.all():
             return
-
         author = cls.get_author_from_obj(instance)
         cls(feed=author.feed.superclassobject,
             author = author,
