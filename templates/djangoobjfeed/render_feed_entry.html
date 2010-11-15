@@ -1,0 +1,11 @@
+{% block feed_entry %}
+  [
+    {% block feed_entry_header %}
+      <a href='{{feed_entry.get_absolute_url}}'>{{feed_entry.display_name}}</a>
+      by
+      <a href='{{feed_entry.author.get_absolute_url}}'>{{feed_entry.author}}</a>
+    {% endblock %}
+  ]
+  {% block feed_entry_body %}
+  {% endblock %}
+{% endblock %}

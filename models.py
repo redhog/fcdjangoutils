@@ -4,6 +4,8 @@ import pinax.apps.tribes.models
 import microblogging.models
 import pinax.apps.blog.models
 import utils.modelhelpers
+import django.template
+import django.template.loader
 
 # Feeds
 
@@ -64,8 +66,12 @@ class ObjFeedEntry(django.db.models.Model, utils.modelhelpers.SubclasModelMixin)
             if subscription.is_for(feed_entry):
                 feed_entry.save()
 
+    # Very very spartan so it can't break into infinite recursion hell... I.e. DONT't call templates here!!!
+    def __repr__(self):
+        return "%s: %s posted to %s" % (type(self), self.author, self.feed)
+
     def __unicode__(self):
-        return "%s posted to %s" % (self.to_string(), self.feed)
+        return "%s posted to %s" % (self.render('txt'), self.feed)
 
     @utils.modelhelpers.subclassproxy
     def get_absolute_url(self):
@@ -74,30 +80,17 @@ class ObjFeedEntry(django.db.models.Model, utils.modelhelpers.SubclasModelMixin)
     @utils.modelhelpers.subclassproxy
     @property
     def display_name(self):
-        return type(self).__name__[:-len('FeedEntry')]
+        return type(self).__name__[:-len('FeedEntry')]        
+
+    template = "djangoobjfeed/render_feed_entry.%(format)s"
 
     @utils.modelhelpers.subclassproxy
-    def header_to_string(self):
-        return "[%s by %s]" % (self.display_name, self.author)
-
-    @utils.modelhelpers.subclassproxy
-    def header_to_html(self):
-        return "<a href='%s'>%s</a> by <a href='%s'>%s</a>" % (self.get_absolute_url(), self.display_name, self.author.get_absolute_url(), self.author)
-
-    @utils.modelhelpers.subclassproxy
-    def header_to_rss(self):
-        return self.header_to_string()
-
-    @utils.modelhelpers.subclassproxy
-    def to_string(self): raise utils.modelhelpers.MustBeOverriddenError
-
-    @utils.modelhelpers.subclassproxy
-    def to_html(self):
-        return self.to_string()
-
-    @utils.modelhelpers.subclassproxy
-    def to_rss(self):
-        return self.to_string()
+    def render(self, format = 'html'):
+        #print "In %s.render for %s" % (type(self), format) 
+        #import traceback
+        #print traceback.print_stack()
+        return django.template.loader.get_template(self.template % {'format':format}
+                                                   ).render(django.template.Context({'feed_entry': self}))
 
 # Feed entry adapers
 
@@ -108,11 +101,7 @@ class TweetFeedEntry(ObjFeedEntry):
     def get_author_from_obj(cls, obj):
         return obj.sender
 
-    def to_string(self):
-        return self.obj.text
-
-    def to_html(self):
-        return self.to_string()
+    template = "djangoobjfeed/render_tweet_entry.%(format)s"
 
 class BlogFeedEntry(ObjFeedEntry):
     obj = django.db.models.ForeignKey(pinax.apps.blog.models.Post, related_name='feed_entry')
@@ -121,8 +110,4 @@ class BlogFeedEntry(ObjFeedEntry):
     def get_author_from_obj(cls, obj):
         return obj.author
 
-    def to_string(self):
-        return self.obj.title + ": " + self.obj.tease
-
-    def to_html(self):
-        return "%s<br />%s" % (self.obj.title, self.obj.tease)
+    template = "djangoobjfeed/render_blog_entry.%(format)s"
