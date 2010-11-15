@@ -1,3 +1,9 @@
+{% load i18n %}
+{% load account_tags %}
+{% load pagination_tags %}
+{% load humanize %}
+{% load objfeed_tags %}
+
 {% block feed_entry %}
   [
     {% block feed_entry_header %}
@@ -8,4 +14,12 @@
   ]
   {% block feed_entry_body %}
   {% endblock %}
+  <div style="border-left: 20pt solid #dddddd;">
+    {% block feed_entry_comments %}
+      {% for sub_entry in feed_entry.comments_in.all %}
+	<hr />
+	{{ sub_entry|render:"html"|safe }}
+      {% endfor %}
+    {% endblock %}
+  </div>
 {% endblock %}

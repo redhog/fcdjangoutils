@@ -58,21 +58,38 @@ class UserFeedSubscription(ObjFeedSubscription):
 
 # Feed entries
 
-class ObjFeedEntryManager(django.db.models.Manager):
+class ObjFeedEntryBaseManager(django.db.models.Manager):
     def get_query_set(self):
         return django.db.models.Manager.get_query_set(self).order_by("posted_at")
 
-class ObjFeedEntry(django.db.models.Model, fcdjangoutils.modelhelpers.SubclasModelMixin):
+class ObjFeedEntryBase(django.db.models.Model, fcdjangoutils.modelhelpers.SubclasModelMixin):
+    class Meta:
+        abstract = True
+
+    objects = ObjFeedEntryBaseManager()
+
+    posted_at = django.db.models.DateTimeField(auto_now=True)
+
+    @property
+    def display_name(self):
+        return type(self).__name__[:-len('FeedEntry')]        
+
+    def render(self, format = 'html'):
+        return django.template.loader.get_template(self.template % {'format':format}
+                                                   ).render(django.template.Context({'feed_entry': self}))
+
+
+class ObjFeedEntry(ObjFeedEntryBase, fcdjangoutils.modelhelpers.SubclasModelMixin):
     class __metaclass__(django.db.models.Model.__metaclass__):
         def __init__(cls, *arg, **kw):
             django.db.models.Model.__metaclass__.__init__(cls, *arg, **kw)
             if cls.__name__ != 'ObjFeedEntry':
                 django.db.models.signals.post_save.connect(cls.obj_post_save, sender=cls.obj.field.rel.to)
 
-    objects = ObjFeedEntryManager()
-
-    posted_at = django.db.models.DateTimeField(auto_now=True)
-    feed = django.db.models.ForeignKey(ObjFeed, related_name="entries")
+    @fcdjangoutils.modelhelpers.subclassproxy
+    @property
+    def obj(self): raise fcdjangoutils.modelhelpers.MustBeOverriddenError
+    feed = django.db.models.ForeignKey("ObjFeed", related_name="entries")
     author = django.db.models.ForeignKey(django.contrib.auth.models.User, related_name="feed_postings")
 
     @classmethod
@@ -102,20 +119,24 @@ class ObjFeedEntry(django.db.models.Model, fcdjangoutils.modelhelpers.SubclasMod
     def get_absolute_url(self):
         return self.obj.get_absolute_url()
 
+    display_name = fcdjangoutils.modelhelpers.subclassproxy(ObjFeedEntryBase.display_name)
+
     @fcdjangoutils.modelhelpers.subclassproxy
     @property
-    def display_name(self):
-        return type(self).__name__[:-len('FeedEntry')]        
+    def template(self):
+        return "djangoobjfeed/render_feed_entry.%(format)s"
 
-    template = "djangoobjfeed/render_feed_entry.%(format)s"
+class CommentFeedEntry(ObjFeedEntryBase):
+    feed = django.db.models.ForeignKey("ObjFeed", related_name="comments")
+    author = django.db.models.ForeignKey(django.contrib.auth.models.User, related_name="feed_comment_postings")
 
-    @fcdjangoutils.modelhelpers.subclassproxy
-    def render(self, format = 'html'):
-        #print "In %s.render for %s" % (type(self), format) 
-        #import traceback
-        #print traceback.print_stack()
-        return django.template.loader.get_template(self.template % {'format':format}
-                                                   ).render(django.template.Context({'feed_entry': self}))
+    comment_on_feed_entry = django.db.models.ForeignKey(ObjFeedEntry, related_name="comments_in", null=True, blank=True)
+    comment_on_comment = django.db.models.ForeignKey("CommentFeedEntry", related_name="comments_in", null=True, blank=True)
+    subject = django.db.models.CharField(max_length=200)
+    content = django.db.models.TextField()
+
+    template = "djangoobjfeed/render_comment_entry.%(format)s"
+
 
 # Feed entry adapers
 
