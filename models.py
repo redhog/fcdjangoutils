@@ -10,6 +10,24 @@ import django.template.loader
 # Feeds
 
 class ObjFeed(django.db.models.Model, fcdjangoutils.modelhelpers.SubclasModelMixin):
+    class __metaclass__(django.db.models.Model.__metaclass__):
+        def __init__(cls, *arg, **kw):
+            django.db.models.Model.__metaclass__.__init__(cls, *arg, **kw)
+            if cls.__name__ != 'ObjFeed':
+                django.db.models.signals.post_save.connect(cls.obj_post_save, sender=cls.owner.field.rel.to)
+
+#    posted_at = django.db.models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def obj_post_save(cls, sender, instance, **kwargs):
+        # Try around this as OneToOneField are stupid and can't handle null in a sensible way
+        try:
+            if instance.feed is not None:
+                return
+        except:
+            pass
+        cls(owner=instance).save()
+
     @fcdjangoutils.modelhelpers.subclassproxy
     @property
     def owner(self): raise fcdjangoutils.modelhelpers.MustBeOverriddenError
@@ -55,6 +73,9 @@ class ObjFeedEntry(django.db.models.Model, fcdjangoutils.modelhelpers.SubclasMod
 
     @classmethod
     def obj_post_save(cls, sender, instance, **kwargs):
+        if instance.feed_entry is not None:
+            return
+
         author = cls.get_author_from_obj(instance)
         cls(feed=author.feed.superclassobject,
             author = author,
