@@ -3,16 +3,16 @@ import django.contrib.auth.models
 import pinax.apps.tribes.models
 import microblogging.models
 import pinax.apps.blog.models
-import utils.modelhelpers
+import fcdjangoutils.modelhelpers
 import django.template
 import django.template.loader
 
 # Feeds
 
-class ObjFeed(django.db.models.Model, utils.modelhelpers.SubclasModelMixin):
-    @utils.modelhelpers.subclassproxy
+class ObjFeed(django.db.models.Model, fcdjangoutils.modelhelpers.SubclasModelMixin):
+    @fcdjangoutils.modelhelpers.subclassproxy
     @property
-    def owner(self): raise utils.modelhelpers.MustBeOverriddenError
+    def owner(self): raise fcdjangoutils.modelhelpers.MustBeOverriddenError
 
     def __unicode__(self):
         return "Feed for %s" % (self.owner,)
@@ -42,7 +42,7 @@ class UserFeedSubscription(ObjFeedSubscription):
 
 # Feed entries
 
-class ObjFeedEntry(django.db.models.Model, utils.modelhelpers.SubclasModelMixin):
+class ObjFeedEntry(django.db.models.Model, fcdjangoutils.modelhelpers.SubclasModelMixin):
     class __metaclass__(django.db.models.Model.__metaclass__):
         def __init__(cls, *arg, **kw):
             django.db.models.Model.__metaclass__.__init__(cls, *arg, **kw)
@@ -73,18 +73,18 @@ class ObjFeedEntry(django.db.models.Model, utils.modelhelpers.SubclasModelMixin)
     def __unicode__(self):
         return "%s posted to %s" % (self.render('txt'), self.feed)
 
-    @utils.modelhelpers.subclassproxy
+    @fcdjangoutils.modelhelpers.subclassproxy
     def get_absolute_url(self):
         return self.obj.get_absolute_url()
 
-    @utils.modelhelpers.subclassproxy
+    @fcdjangoutils.modelhelpers.subclassproxy
     @property
     def display_name(self):
         return type(self).__name__[:-len('FeedEntry')]        
 
     template = "djangoobjfeed/render_feed_entry.%(format)s"
 
-    @utils.modelhelpers.subclassproxy
+    @fcdjangoutils.modelhelpers.subclassproxy
     def render(self, format = 'html'):
         #print "In %s.render for %s" % (type(self), format) 
         #import traceback
