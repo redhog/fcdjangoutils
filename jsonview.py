@@ -55,6 +55,9 @@ def jsonify_models(obj):
     else:
         return obj
 
+def to_json(obj, default=jsonify_models):
+    return django.utils.simplejson.dumps(res, default)
+
 def json_view(fn):
     """View decorator for views that return pure JSON"""
     def jsonify(*arg, **kw):
@@ -89,6 +92,22 @@ def get_foreign_objects(obj, path):
         else:
             yield obj
 
+def expand_foreign_key(objs, foreign_key_col):
+    res = {}
+    if hasattr(objs, 'all'):
+        objs = objs.all()
+    for obj in objs:
+        for foreign in get_foreign_objects(obj, foreign_key_col.split("__")):
+            if foreign is not None:
+                res[foreign.pk] = foreign
+    return res
+
+def expand_foreign_keys(objs, follow_foreign_keys={}):
+    res = {}
+    for foreign_key_name, foreign_key_col in follow_foreign_keys.iteritems():
+        res[foreign_key_name] = expand_foreign_key(objs, foreign_key_col)
+    return res
+
 def get_view(name, cls, follow_foreign_keys={}):
     @json_view
     def get_view(request, *arg, **kw):
@@ -101,11 +120,6 @@ def get_view(name, cls, follow_foreign_keys={}):
             selfs = selfs.order_by(*django.utils.simplejson.loads(request.GET['order_by']))
 
         res = {name: selfs}
-        for foreign_key_name, foreign_key_col in follow_foreign_keys.iteritems():
-            res[foreign_key_name] = {}
-            for self in selfs:
-                for foreign in get_foreign_objects(self, foreign_key_col.split("__")):
-                    if foreign is not None:
-                        res[foreign_key_name][foreign.pk] = foreign
+        res.update(expand_foreign_keys(selfs, follow_foreign_keys))
         return res
     return get_view
