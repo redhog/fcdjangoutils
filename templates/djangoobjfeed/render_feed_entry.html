@@ -22,4 +22,13 @@
       {% endfor %}
     {% endblock %}
   </div>
+<!--
+  <form action="{% url djangoobjfeed.views.post_comment %}" method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="comment_on_feed_entry" value="{{feed_entry.id}}">
+    <input type="text" name="subject"><br />
+    <textarea name="content"></textarea><br />
+    <input type="submit">
+  </form>
+-->
 {% endblock %}

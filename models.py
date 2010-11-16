@@ -75,6 +75,11 @@ class ObjFeedEntryBase(django.db.models.Model, fcdjangoutils.modelhelpers.Subcla
         return type(self).__name__[:-len('FeedEntry')]        
 
     def render(self, format = 'html'):
+        # cls = type(self)
+        # cache = '_compiled_template_' + format
+        # if not hasattr(cls, cache):
+        #     setattr(cls, cache, django.template.loader.get_template(self.template % {'format':format}))
+        # return getattr(cls, cache).render(django.template.Context({'feed_entry': self}))
         return django.template.loader.get_template(self.template % {'format':format}
                                                    ).render(django.template.Context({'feed_entry': self}))
 
