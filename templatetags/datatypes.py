@@ -8,6 +8,7 @@ from django.db.models.query import QuerySet
 from django.utils import simplejson
 import django.db.models.base
 import fcdjangoutils.jsonview
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -39,7 +40,7 @@ def aadd_filter(value1, value2):
     return value1 + value2
 
 def jsonify_filter(obj):
-    return simplejson.dumps(obj, default=fcdjangoutils.jsonview.jsonify_models)
+    return mark_safe(simplejson.dumps(obj, default=fcdjangoutils.jsonview.jsonify_models))
 
 def expandforeign_filter(objs, foreign_key_col):
     return fcdjangoutils.jsonview.expand_foreign_key(objs, foreign_key_col)
