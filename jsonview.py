@@ -94,7 +94,9 @@ def get_foreign_objects(obj, path):
 
 def expand_foreign_key(objs, foreign_key_col):
     res = {}
-    if hasattr(objs, 'all'):
+    if isinstance(objs, django.db.models.base.Model):
+        objs = [objs]
+    elif isinstance(obj, QuerySet):
         objs = objs.all()
     for obj in objs:
         for foreign in get_foreign_objects(obj, foreign_key_col.split("__")):
