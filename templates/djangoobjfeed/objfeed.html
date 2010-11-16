@@ -6,5 +6,5 @@
 
 {% for entry in feed.entries.all %}
   <hr />
-  {{ entry|render:"html"|safe }}
+  {% render entry "html" %}
 {% endfor %}

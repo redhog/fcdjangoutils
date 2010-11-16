@@ -7,11 +7,11 @@ def post_comment(request, *arg, **kw):
     comment_on_comment = None
 
     if 'comment_on_feed_entry' in request.POST:
-        comment_on_feed_entry = ObjFeedEntry.get(int(request.POST['comment_on_feed_entry']))
+        comment_on_feed_entry = djangoobjfeed.models.ObjFeedEntry.objects.get(id=int(request.POST['comment_on_feed_entry']))
         feed = comment_on_feed_entry.feed
 
     if 'comment_on_comment' in request.POST:
-        comment_on_comment = CommentFeedEntry.get(int(request.POST['comment_on_comment']))
+        comment_on_comment = djangoobjfeed.models.CommentFeedEntry.objects.get(id=int(request.POST['comment_on_comment']))
         feed = comment_on_comment.feed
 
     djangoobjfeed.models.CommentFeedEntry(
@@ -23,4 +23,4 @@ def post_comment(request, *arg, **kw):
         content = request.POST['content']
         ).save()
 
-    django.shortcuts.redirect(request.META['HTTP_REFERER'])
+    return django.shortcuts.redirect(request.META['HTTP_REFERER'])

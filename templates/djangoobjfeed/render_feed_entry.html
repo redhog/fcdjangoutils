@@ -3,32 +3,36 @@
 {% load pagination_tags %}
 {% load humanize %}
 {% load objfeed_tags %}
+{% load avatar_tags %}
 
 {% block feed_entry %}
-  [
+  <div class="feed_entry" style="padding-left: 50px;">
+    <img src="{% avatar_url feed_entry.author 40 %}" alt="Photo of {{ feed_entry.author }}" class="photo"  style="float: left; margin-left: -50px;" />
     {% block feed_entry_header %}
       <a href='{{feed_entry.get_absolute_url}}'>{{feed_entry.display_name}}</a>
       by
-      <a href='{{feed_entry.author.get_absolute_url}}'>{{feed_entry.author}}</a>
+      <a href='{{feed_entry.author.get_absolute_url}}'>{{feed_entry.author}}</a>:
     {% endblock %}
-  ]
-  {% block feed_entry_body %}
-  {% endblock %}
-  <div style="border-left: 20pt solid #dddddd;">
-    {% block feed_entry_comments %}
-      {% for sub_entry in feed_entry.comments_in.all %}
-	<hr />
-	{{ sub_entry|render:"html"|safe }}
-      {% endfor %}
+    {% block feed_entry_body %}
     {% endblock %}
+    <div>
+      {% block feed_entry_comments %}
+	{% for sub_entry in feed_entry.comments_in.all %}
+	  <hr />
+	  {% render sub_entry "html" %}
+	{% endfor %}
+      {% endblock %}
+    </div>
+    <form action="{% url djangoobjfeed.views.post_comment %}" method="POST">
+      {% csrf_token %}
+      {% if feed_entry.subject %}
+        <input type="hidden" name="comment_on_comment" value="{{feed_entry.id}}">
+      {% else %}
+        <input type="hidden" name="comment_on_feed_entry" value="{{feed_entry.id}}">
+      {% endif %}
+      <input type="text" name="subject"><br />
+      <textarea name="content"></textarea><br />
+      <input type="submit">
+    </form>
   </div>
-<!--
-  <form action="{% url djangoobjfeed.views.post_comment %}" method="POST">
-    {% csrf_token %}
-    <input type="hidden" name="comment_on_feed_entry" value="{{feed_entry.id}}">
-    <input type="text" name="subject"><br />
-    <textarea name="content"></textarea><br />
-    <input type="submit">
-  </form>
--->
 {% endblock %}

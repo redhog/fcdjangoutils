@@ -74,14 +74,19 @@ class ObjFeedEntryBase(django.db.models.Model, fcdjangoutils.modelhelpers.Subcla
     def display_name(self):
         return type(self).__name__[:-len('FeedEntry')]        
 
-    def render(self, format = 'html'):
+    def render(self, format = 'html', context = None):
         # cls = type(self)
         # cache = '_compiled_template_' + format
         # if not hasattr(cls, cache):
         #     setattr(cls, cache, django.template.loader.get_template(self.template % {'format':format}))
         # return getattr(cls, cache).render(django.template.Context({'feed_entry': self}))
+
+        ctx = django.template.Context({})
+        ctx['csrf_token'] = context['csrf_token']
+        ctx['feed_entry'] = self
+        
         return django.template.loader.get_template(self.template % {'format':format}
-                                                   ).render(django.template.Context({'feed_entry': self}))
+                                                   ).render(ctx)
 
 
 class ObjFeedEntry(ObjFeedEntryBase, fcdjangoutils.modelhelpers.SubclasModelMixin):
