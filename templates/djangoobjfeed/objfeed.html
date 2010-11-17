@@ -4,6 +4,8 @@
 {% load humanize %}
 {% load objfeed_tags %}
 
+<script src="{{ STATIC_URL }}fcdjangoutils/js/expand.js"></script>
+
 {% for entry in feed.entries.all %}
   <hr />
   {% render entry "html" %}
