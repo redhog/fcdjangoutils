@@ -5,9 +5,10 @@ key_match_2 = re.compile(r'^(\w+)\[(\w+)\]$')
 key_match_3 = re.compile(r'^(\w+)\[(\w+)\]\.')
 key_match_4 = re.compile(r'^(\w+)\[]$')
 
-class QueryTree(dict):
+class QueryTree(object):
 
     def __init__(self, orig=None, prefix=""):
+        self.__data = {}
 
         if orig is None:
             return
@@ -50,23 +51,34 @@ class QueryTree(dict):
                     self[key] = orig[i]
 
     def __getattr__(self, name):
-        if name in self:
-            return self[name]
+        if name in self.__data:
+            return self.__data[name]
+        print "Missing attribute", name, "in", self.__data
         raise AttributeError
+
+    def __setitem__(self, name, value):
+        self.__data[name] = value
+
+    def __contains__(self, name):
+        return name in self.__data
+
+    def __len__(self):
+        return len(self.__data)
     
     def __getitem__(self, name):
         if type(name) is int:
-            return dict.__getitem__(self, unicode(name))
-        return dict.__getitem__(self, name)
+            return self.__data[unicode(name)]
+
+        return self.__data[name]
     
     @property
     def as_list(self):
         res = [None] * len(self)
-        for key, val in self.iteritems():
+        for key,val in self.__data.iteritems():
             res[int(key)] = val
         return res
 
-def main():
+def test_querytree():
     class qdfake(dict):
         def getlist(self, name):
             return [7,2,4]
@@ -106,5 +118,5 @@ def main():
     assert(res.comb.as_list[1].fld1 == 'c1f1')
 
 if __name__ == '__main__':
-    main()
+    test_querytree()
 
