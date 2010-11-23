@@ -12,10 +12,10 @@ class WidgetTagMiddleware(object):
         return None
 
     def process_response(self, request, response):
-        if response['ContentType']
-        for name, values in getattr(self.data, 'vars', {}).iteritems():
-            response.content = response.content.replace('%WidgetTagMiddleware.'+name+'%', ''.join(values.itervalues()))
-        response.content = self.var_re.sub('', response.content)
+        if 'text/' in response['Content-Type']:
+            for name, values in getattr(self.data, 'vars', {}).iteritems():
+                response.content = response.content.replace('%WidgetTagMiddleware.'+name+'%', ''.join(values.itervalues()))
+            response.content = self.var_re.sub('', response.content)
         return response
 
     def process_exception(self, request, exception):
