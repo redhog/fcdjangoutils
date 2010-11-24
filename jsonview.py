@@ -55,7 +55,7 @@ def jsonify_models(obj):
         return str(obj)
     # GAH, Django hides the class for lazy translation strings. I HATE IT SO MUCH!!!
     elif type(obj).__name__ == '__proxy__' and type(obj).__module__ =='django.utils.functional' :
-        return obj.encode()
+        return obj.encode("utf-8")
     else:
         return obj
 
