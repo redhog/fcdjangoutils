@@ -52,6 +52,7 @@ String.prototype.format = function(){
 	    break;
 	}
     }
+
     return res;
 };
 
