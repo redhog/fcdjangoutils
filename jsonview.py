@@ -9,6 +9,7 @@ from jogging import logging
 from StringIO import StringIO
 from django.db.models.query import QuerySet
 import datetime
+import django.utils.functional
 
 # Hack serialize to include fields from inherited classes too
 def _serialize(self, queryset, **options):
@@ -52,6 +53,9 @@ def jsonify_models(obj):
         return django.core.serializers.serialize('python', obj)
     elif isinstance(obj, (datetime.datetime, datetime.date)):
         return str(obj)
+    # GAH, Django hides the class for lazy translation strings. I HATE IT SO MUCH!!!
+    elif type(obj).__name__ == '__proxy__' and type(obj).__module__ =='django.utils.functional' :
+        return obj.encode()
     else:
         return obj
 
