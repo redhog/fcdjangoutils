@@ -27,8 +27,6 @@ String.prototype.format = function(){
 		    throw "Invalid format string";
 
 		var name = this.substr(idx+2, end-idx-2);
-		console.log('name is');
-		console.log(name);
 		idx = end+1;
 		switch(this[idx]){
 		case 's':
