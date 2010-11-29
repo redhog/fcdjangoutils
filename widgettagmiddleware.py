@@ -13,9 +13,17 @@ class WidgetTagMiddleware(object):
 
     def process_response(self, request, response):
         if 'text/' in response['Content-Type']:
-            for name, values in getattr(self.data, 'vars', {}).iteritems():
-                response.content = response.content.replace('%WidgetTagMiddleware.'+name+'%', ''.join(values.itervalues()))
-            response.content = self.var_re.sub('', response.content)
+            try:
+                for name, values in getattr(self.data, 'vars', {}).iteritems():
+                    response.content = response.content.replace('%WidgetTagMiddleware.'+name+'%', ''.join(values.itervalues()).encode('utf-8'))
+                response.content = self.var_re.sub('', response.content)
+            except Exception, e:
+                print e
+                print response['Content-Type']
+                print type(response.content)
+                for name, values in getattr(self.data, 'vars', {}).iteritems():
+                    print type(name), [type(v) for v in values.itervalues()]
+                raise
         return response
 
     def process_exception(self, request, exception):
@@ -34,12 +42,20 @@ class WidgetTagMiddleware(object):
         cls.data.vars[section][key] = value
 
     @classmethod
-    def addjs(cls, filename):
-        cls.add("head.javascript", filename, "<script language='javascript' type='text/javascript' src='%s'></script>" % (filename,))
+    def addjsfile(cls, filename):
+        cls.add("head.javascript", filename, "<script id='%s' language='javascript' type='text/javascript' src='%s'></script>" % (filename, filename,))
 
     @classmethod
-    def addcss(cls, filename):
-        cls.add("head.css", filename, "<link rel='stylesheet' type='text/css' href='%s' />" % (filename,))
+    def addcssfile(cls, filename):
+        cls.add("head.css", filename, "<link id='%s' rel='stylesheet' type='text/css' href='%s' />" % (filename, filename,))
+
+    @classmethod
+    def addjs(cls, name, js):
+        cls.add("head.javascript", name, "<script id='%s' language='javascript' type='text/javascript'>%s</script>" % (name, js))
+
+    @classmethod
+    def addcss(cls, name, css):
+        cls.add("head.css", name, "<style id='%s' type='text/css'>%s</style>" % (name, css))
 
     @classmethod
     def adddialog(cls, name, html):
