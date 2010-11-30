@@ -59,4 +59,4 @@ class WidgetTagMiddleware(object):
 
     @classmethod
     def adddialog(cls, name, html):
-        cls.add("body.dialog", name, "<div id='%s'>%s<div>" % (name, html))
+        cls.add("body.dialog", name, "<div id='%s'>%s</div>" % (name, html))
