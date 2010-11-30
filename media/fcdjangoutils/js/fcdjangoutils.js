@@ -88,6 +88,13 @@ fcdjangoutils.toIsoDate = function (date){
     return "" + date.getFullYear() + "-" + (date.getMonth()+1)+"-" + date.getDate();
 }
 
+/**
+ * Mangles a valid form name attribute into something that can be used as a dom id by replacing all unholy characters with underscores.
+ */
+fcdjangoutils.nameToId = function (name){
+  return name.replace(/[^a-zA-Z0-9_]/g,'_');
+};
+
 /* Make sure the application works even if console debugging is used without an active Firebug. */
 if(typeof(console) === 'undefined') {
     var console = {}
