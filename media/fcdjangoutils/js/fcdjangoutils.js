@@ -93,3 +93,26 @@ if(typeof(console) === 'undefined') {
     var console = {}
     console.log = console.error = console.info = console.debug = console.warn = console.trace = console.dir = console.dirxml = console.group = console.groupEnd = console.time = console.timeEnd = console.assert = console.profile = function() {};
 }
+
+$.extend(
+  $.validator.messages,
+  {
+    required: gettext("This field is required."),
+    remote: gettext("Please fix this field."),
+    email: gettext("Please enter a valid email address."),
+    url: gettext("Please enter a valid URL."),
+    date: gettext("Please enter a valid date."),
+    dateISO: gettext("Please enter a valid date (ISO)."),
+    number: gettext("Please enter a valid number."),
+    digits: gettext("Please enter only digits."),
+    creditcard: gettext("Please enter a valid credit card number."),
+    equalTo: gettext("Please enter the same value again."),
+    accept: gettext("Please enter a value with a valid extension."),
+    maxlength: $.validator.format(gettext("Please enter no more than {0} characters.")),
+    minlength: $.validator.format(gettext("Please enter at least {0} characters.")),
+    rangelength: $.validator.format(gettext("Please enter a value between {0} and {1} characters long.")),
+    range: $.validator.format(gettext("Please enter a value between {0} and {1}.")),
+    max: $.validator.format(gettext("Please enter a value less than or equal to {0}.")),
+    min: $.validator.format(gettext("Please enter a value greater than or equal to {0}."))
+  });
+
