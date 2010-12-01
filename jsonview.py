@@ -11,6 +11,8 @@ from django.db.models.query import QuerySet
 import datetime
 import django.utils.functional
 
+from fcdjangoutils.timer import Timer
+
 # Hack serialize to include fields from inherited classes too
 def _serialize(self, queryset, **options):
     """
@@ -47,6 +49,7 @@ def jsonify_models(obj):
     """default-handler for simplejson dump that serializes Django
     model objects and query sets as well as some other random bits and
     pieces like dates"""
+    
     if isinstance(obj, django.db.models.base.Model):
         return django.core.serializers.serialize('python', [obj])[0]
     elif isinstance(obj, QuerySet):
@@ -91,7 +94,7 @@ def get_foreign_objects(obj, path):
 
     for obj in foreign:
         if path:
-            for res in get_foreign_objects(obj, path):
+            for res in get_f|oreign_objects(obj, path):
                 yield res
         else:
             yield obj
