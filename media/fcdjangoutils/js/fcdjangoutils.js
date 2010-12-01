@@ -123,3 +123,30 @@ $.extend(
     min: $.validator.format(gettext("Please enter a value greater than or equal to {0}."))
   });
 
+fcdjangoutils.findFirst = function(collection, test){
+  var res = null;
+  $.each(
+    collection,
+    function(key, value){
+      if(test.apply(value, [value])){
+	res = value; return false;
+      }
+      return true;
+    }
+  );
+  return res;
+};
+
+fcdjangoutils.findLast = function(collection, test){
+  var res = null;
+  $.each(
+    collection,
+    function(key, value){
+      if(test.apply(value, [key,value])){
+	res = value;
+      }
+    }
+  );
+  return res;
+};
+
