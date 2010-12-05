@@ -46,7 +46,7 @@ class QueryTree(object):
                 elif m4:
                     subkey = m4.group(1)
                     if subkey not in self:
-                        self[subkey] = orig.getlist(subkey)
+                        self[subkey] = orig.getlist(key)
                 else:
                     self[key] = orig[i]
 
