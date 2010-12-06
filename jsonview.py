@@ -11,48 +11,15 @@ from django.db.models.query import QuerySet
 import datetime
 import django.utils.functional
 
-from fcdjangoutils.timer import Timer
-
-# Hack serialize to include fields from inherited classes too
-def _serialize(self, queryset, **options):
-    """
-    Serialize a queryset.
-    """
-    self.options = options
-
-    self.stream = options.get("stream", StringIO())
-    self.selected_fields = options.get("fields")
-    self.use_natural_keys = options.get("use_natural_keys", False)
-
-    self.start_serialization()
-    for obj in queryset:
-        self.start_object(obj)
-        for field in obj._meta.fields: #### <---- Hack is here, was obj._meta.local_fields in django code
-            if field.serialize:
-                if field.rel is None:
-                    if self.selected_fields is None or field.attname in self.selected_fields:
-                        self.handle_field(obj, field)
-                else:
-                    if self.selected_fields is None or field.attname[:-3] in self.selected_fields:
-                        self.handle_fk_field(obj, field)
-        for field in obj._meta.many_to_many:
-            if field.serialize:
-                if self.selected_fields is None or field.attname in self.selected_fields:
-                    self.handle_m2m_field(obj, field)
-        self.end_object(obj)
-    self.end_serialization()
-    return self.getvalue()
-
-#django.core.serializers.base.Serializer.serialize = _serialize
-
 def jsonify_models(obj):
     """default-handler for simplejson dump that serializes Django
     model objects and query sets as well as some other random bits and
     pieces like dates"""
     
-#    if isinstance(obj, django.db.models.base.Model):
-#        return django.core.serializers.serialize('python', [obj])[0]
-    if isinstance(obj, QuerySet):
+    # This will perform an extra DB lookup. Inefficient and stupid, but it should never be used anyway...
+    if isinstance(obj, django.db.models.base.Model):
+        return type(obj).objects.values().get(id=obj.id)
+    elif isinstance(obj, QuerySet):
         return list(obj.values())
     elif isinstance(obj, (datetime.datetime, datetime.date)):
         return str(obj)
