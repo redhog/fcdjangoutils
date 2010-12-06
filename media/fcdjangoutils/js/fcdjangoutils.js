@@ -85,7 +85,9 @@ fcdjangoutils.fromIsoDate = function(txt){
 };
 
 fcdjangoutils.toIsoDate = function (date){
-    return "" + date.getFullYear() + "-" + (date.getMonth()+1)+"-" + date.getDate();
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    return "" + date.getFullYear() + "-" + ((month < 10 ? '0' : '') + month) + "-" + ((day < 10 ? '0' : '') + day);
 }
 
 /**
@@ -122,4 +124,31 @@ $.extend(
     max: $.validator.format(gettext("Please enter a value less than or equal to {0}.")),
     min: $.validator.format(gettext("Please enter a value greater than or equal to {0}."))
   });
+
+fcdjangoutils.findFirst = function(collection, test){
+  var res = null;
+  $.each(
+    collection,
+    function(key, value){
+      if(test.apply(value, [value])){
+	res = value; return false;
+      }
+      return true;
+    }
+  );
+  return res;
+};
+
+fcdjangoutils.findLast = function(collection, test){
+  var res = null;
+  $.each(
+    collection,
+    function(key, value){
+      if(test.apply(value, [key,value])){
+	res = value;
+      }
+    }
+  );
+  return res;
+};
 

@@ -3,7 +3,7 @@ import re
 key_match_1 = re.compile(r'^(\w+)\.')
 key_match_2 = re.compile(r'^(\w+)\[(\w+)\]$')
 key_match_3 = re.compile(r'^(\w+)\[(\w+)\]\.')
-key_match_4 = re.compile(r'^(\w+)\[]$')
+key_match_4 = re.compile(r'^(\w+)\[\]$')
 
 class QueryTree(object):
 
@@ -46,11 +46,22 @@ class QueryTree(object):
                 elif m4:
                     subkey = m4.group(1)
                     if subkey not in self:
-                        self[subkey] = orig.getlist(subkey)
+                        self[subkey] = orig.getlist(key)
                 else:
                     self[key] = orig[i]
 
+    def __unicode__(self):
+        return unicode(self.__data)
+
+    def __str__(self):
+        return str(self.__data)
+
+    def __repr__(self):
+        return repr(self.__data)
+
     def __getattr__(self, name):
+        if name == '__data':
+            return self.__data
         if name in self.__data:
             return self.__data[name]
         print "Missing attribute", name, "in", self.__data
@@ -67,6 +78,7 @@ class QueryTree(object):
     
     def __getitem__(self, name):
         if type(name) is int:
+            print 'YAY', name, self.__data
             return self.__data[unicode(name)]
 
         return self.__data[name]
@@ -81,7 +93,8 @@ class QueryTree(object):
 def test_querytree():
     class qdfake(dict):
         def getlist(self, name):
-            return [7,2,4]
+            if name == 'arr[]':
+                return ['7','2','4']
 
     res = QueryTree(
         qdfake({
@@ -104,10 +117,8 @@ def test_querytree():
             'comb2[1].chld[0].fld':'c1c0f',
             'comb2[1].chld[1].fld':'c1c1f',
             'comb2[1].chld[2].fld':'c1c2f',
-            
-            'arr[]':7,
-            'arr[]':2,
-            'arr[]':4,
+
+            'arr[]':'7',
             }))
 
     assert(res['foo'] == 'bar')
@@ -116,6 +127,7 @@ def test_querytree():
     assert(res.arr[1] == 2)
     assert(res['arr'][0] == 7)
     assert(res.comb.as_list[1].fld1 == 'c1f1')
+    assert(res.woot.as_list[1].chld == 'w2c')
 
 if __name__ == '__main__':
     test_querytree()

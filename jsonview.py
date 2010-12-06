@@ -11,6 +11,8 @@ from django.db.models.query import QuerySet
 import datetime
 import django.utils.functional
 
+from fcdjangoutils.timer import Timer
+
 # Hack serialize to include fields from inherited classes too
 def _serialize(self, queryset, **options):
     """
@@ -41,16 +43,17 @@ def _serialize(self, queryset, **options):
     self.end_serialization()
     return self.getvalue()
 
-django.core.serializers.base.Serializer.serialize = _serialize
+#django.core.serializers.base.Serializer.serialize = _serialize
 
 def jsonify_models(obj):
     """default-handler for simplejson dump that serializes Django
     model objects and query sets as well as some other random bits and
     pieces like dates"""
-    if isinstance(obj, django.db.models.base.Model):
-        return django.core.serializers.serialize('python', [obj])[0]
-    elif isinstance(obj, QuerySet):
-        return django.core.serializers.serialize('python', obj)
+    
+#    if isinstance(obj, django.db.models.base.Model):
+#        return django.core.serializers.serialize('python', [obj])[0]
+    if isinstance(obj, QuerySet):
+        return list(obj.values())
     elif isinstance(obj, (datetime.datetime, datetime.date)):
         return str(obj)
     # GAH, Django hides the class for lazy translation strings. I HATE IT SO MUCH!!!
@@ -75,7 +78,6 @@ def json_view(fn):
                              'description': str(e),
                              'traceback': traceback.format_exc()}}
             logging.error("%s: %s" % (str(e), res['error']['type']))
-        print "RES", fn.__name__, django.utils.simplejson.dumps(res, default=jsonify_models)
         return django.http.HttpResponse(django.utils.simplejson.dumps(res, default=jsonify_models),
                                         mimetype="text/plain")
     return jsonify
@@ -91,7 +93,7 @@ def get_foreign_objects(obj, path):
 
     for obj in foreign:
         if path:
-            for res in get_foreign_objects(obj, path):
+            for res in get_f|oreign_objects(obj, path):
                 yield res
         else:
             yield obj
