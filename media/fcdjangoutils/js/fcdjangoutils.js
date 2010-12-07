@@ -54,15 +54,19 @@ String.prototype.format = function(){
     return res;
 };
 
-fcdjangoutils.message = function(msg, id, style){
+fcdjangoutils.message = function(msg, id, style, fadeOut){
     style = style || 'message';
     var lst = $('#messages');
     var line = $('<li>').text(msg).addClass(style);
     if(id) {
-	$('#' + id, lst).detach();
-	line.attr('id', id);
+    	$('#' + id, lst).detach();
+    	line.attr('id', id);
     }
     lst.append(line);
+
+    if (fadeOut) {
+      setTimeout(function() { line.fadeOut(); }, 5000);
+    }
 }
 
 fcdjangoutils.error = function(msg, id){
