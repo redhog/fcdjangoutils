@@ -30,7 +30,7 @@ def jsonify_models(obj):
         return obj
 
 def to_json(obj, default=jsonify_models):
-    return django.utils.simplejson.dumps(res, default)
+    return django.utils.simplejson.dumps(obj, default)
 
 def json_view(fn):
     """View decorator for views that return pure JSON"""
