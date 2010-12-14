@@ -94,6 +94,16 @@ fcdjangoutils.toIsoDate = function (date){
     return "" + date.getFullYear() + "-" + ((month < 10 ? '0' : '') + month) + "-" + ((day < 10 ? '0' : '') + day);
 }
 
+/** Get the number of hours, minutes and seconds from a number just consisting of seconds. */
+fcdjangoutils.parseTimeField = function(totalSeconds)
+{
+  var tm = parseInt(totalSeconds, 10);
+  var hours = Math.floor(tm/3600);
+  var minutes = Math.floor((tm%3600)/60);
+  var seconds = Math.floor(tm%60);
+  return [hours, minutes, seconds];
+}
+
 /**
  * Mangles a valid form name attribute into something that can be used as a dom id by replacing all unholy characters with underscores.
  */
