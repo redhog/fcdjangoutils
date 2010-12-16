@@ -77,10 +77,10 @@ fcdjangoutils.warning = function(msg, id){
     fcdjangoutils.message(msg, id, 'warning');
 }
 
-fcdjangoutils.fromIsoDate = function(txt){
+fcdjangoutils.fromIsoDate = function(txt) {
     var darr = txt.split("-");
     if(darr.length != 3)
-	return null;
+      return null;
     // Input is iso date, but javascript expects
     // month component in range 0..11,
     // so we subtract one from the month
