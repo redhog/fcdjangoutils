@@ -54,6 +54,22 @@ String.prototype.format = function(){
     return res;
 };
 
+fcdjangoutils.formatTimeField = function(value){
+  var tm = fcdjangoutils.parseTimeField(value);
+  return tm[0] + ":" + (tm[1] < 10 ? '0':'') + tm[1];
+};
+
+fcdjangoutils.join = function(str, arr){
+  return _.reduce(
+    _.rest(arr),
+    function(prev, val){
+      return prev + str + val
+    },
+    _.first(arr)
+  );
+
+};
+
 fcdjangoutils.message = function(msg, id, style, fadeOut){
     style = style || 'message';
     var lst = $('#messages');
@@ -67,15 +83,15 @@ fcdjangoutils.message = function(msg, id, style, fadeOut){
     if (fadeOut) {
       setTimeout(function() { line.fadeOut(); }, 5000);
     }
-}
+};
 
 fcdjangoutils.error = function(msg, id){
     fcdjangoutils.message(msg,id, 'error');
-}
+};
 
 fcdjangoutils.warning = function(msg, id){
     fcdjangoutils.message(msg, id, 'warning');
-}
+};
 
 fcdjangoutils.fromIsoDate = function(txt) {
     var darr = txt.split("-");
@@ -92,7 +108,7 @@ fcdjangoutils.toIsoDate = function (date){
     var month = date.getMonth() + 1;
     var day = date.getDate();
     return "" + date.getFullYear() + "-" + ((month < 10 ? '0' : '') + month) + "-" + ((day < 10 ? '0' : '') + day);
-}
+};
 
 /** Get the number of hours, minutes and seconds from a number just consisting of seconds. */
 fcdjangoutils.parseTimeField = function(totalSeconds)
@@ -102,7 +118,7 @@ fcdjangoutils.parseTimeField = function(totalSeconds)
   var minutes = Math.floor((tm%3600)/60);
   var seconds = Math.floor(tm%60);
   return [hours, minutes, seconds];
-}
+};
 
 /**
  * Mangles a valid form name attribute into something that can be used as a dom id by replacing all unholy characters with underscores.
@@ -115,7 +131,7 @@ fcdjangoutils.nameToId = function (name){
 if(typeof(console) === 'undefined') {
     var console = {}
     console.log = console.error = console.info = console.debug = console.warn = console.trace = console.dir = console.dirxml = console.group = console.groupEnd = console.time = console.timeEnd = console.assert = console.profile = function() {};
-}
+};
 
 $.extend(
   $.validator.messages,
