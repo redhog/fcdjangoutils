@@ -54,6 +54,11 @@ String.prototype.format = function(){
     return res;
 };
 
+Date.prototype.getWeek = function() {
+  var onejan = new Date(this.getFullYear(),0,1);
+  return Math.ceil((((this - onejan) / 86400000) + onejan.getDay()+1)/7);
+};
+
 fcdjangoutils.formatTimeField = function(value){
   var tm = fcdjangoutils.parseTimeField(value);
   return tm[0] + ":" + (tm[1] < 10 ? '0':'') + tm[1];
