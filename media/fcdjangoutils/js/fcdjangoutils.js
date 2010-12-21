@@ -1,5 +1,5 @@
 var fcdjangoutils = {
-
+  itemIdx: 0
 };
 
 String.prototype.format = function(){
@@ -185,5 +185,9 @@ fcdjangoutils.findLast = function(collection, test){
     }
   );
   return res;
+};
+
+fcdjangoutils.template = function(name){
+  return $('.template .' +name).html().replace(/\.\.\./g, fcdjangoutils.itemIdx++);
 };
 
