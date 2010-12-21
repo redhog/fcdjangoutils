@@ -95,3 +95,32 @@ def widget_adddialog(parser, token):
  
     parser.delete_first_token()
     return Node()
+
+
+@register.tag
+def widget_uniquename(parser, token):
+    """Usage: {% widget_uniquename varname "group" %}"""
+
+    try:
+        tag_name, varname, group = token.split_contents()
+    except ValueError:
+        raise django.template.TemplateSyntaxError, "%r tag requires one argument" % token.contents.split()[0]
+
+    groupvar = django.template.Variable(group)
+
+    class Node(django.template.Node):
+        def render(self, context):
+            request = context['request']
+            group = groupvar.resolve(context)
+
+            if not hasattr(request, 'widget_uniquename'):
+                request.widget_uniquename = {}
+            if group not in request.widget_uniquename:
+                request.widget_uniquename[group] = 0
+
+            context[varname] = request.widget_uniquename[group]
+            request.widget_uniquename[group] += 1
+
+            return ''
+
+    return Node()
