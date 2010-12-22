@@ -1,0 +1,39 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-12-22 16:04-0500\n"
+"PO-Revision-Date: 2010-12-22 22:08+0100\n"
+"Last-Translator: Reidar Øksnevad <reidar.oksnevad@freecode.no>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: templatetags/time_tags.py:26
+msgid "No change"
+msgstr "Ingen forandring"
+
+#: templatetags/time_tags.py:28
+msgid "better"
+msgstr "bedre"
+
+#: templatetags/time_tags.py:30
+msgid "worse"
+msgstr "dårligere"
+
+#: templatetags/time_tags.py:35
+#, python-format
+msgid "%d minutes"
+msgstr "%d minutter"
+
+#: templatetags/time_tags.py:37
+#, python-format
+msgid "%d seconds"
+msgstr "%d sekunder"
+
