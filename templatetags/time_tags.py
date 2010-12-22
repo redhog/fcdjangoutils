@@ -29,11 +29,13 @@ def duration_diff(dd):
     else:
         suffix  = _('worse')
 
-    dd = math.abs(dd)
+    dd = abs(dd)
     res = ""
     if dd > 60:
         res += _("%d minutes") % (dd/60)
+        res += " "
     res += _("%d seconds") % (dd%60)
 
-    res += " " + suffix
+    res += " "
+    res += suffix.encode("utf-8")
     return res
