@@ -11,23 +11,45 @@ from django.db.models.query import QuerySet
 import datetime
 import django.utils.functional
 
-def jsonify_models(obj):
-    """default-handler for simplejson dump that serializes Django
-    model objects and query sets as well as some other random bits and
-    pieces like dates"""
-    
-    # This will perform an extra DB lookup. Inefficient and stupid, but it should never be used anyway...
-    if isinstance(obj, django.db.models.base.Model):
-        return type(obj).objects.values().get(id=obj.id)
-    elif isinstance(obj, QuerySet):
-        return list(obj.values())
-    elif isinstance(obj, (datetime.datetime, datetime.date)):
-        return str(obj)
-    # GAH, Django hides the class for lazy translation strings. I HATE IT SO MUCH!!!
-    elif type(obj).__name__ == '__proxy__' and type(obj).__module__ =='django.utils.functional' :
-        return obj.encode("utf-8")
-    else:
+class JsonEncodeRegistry(object):
+    registry = []
+
+    @classmethod
+    def register(cls, instof=None, test=None):
+        if test is None:
+            def test(obj):
+                return isinstance(obj, instof)
+        def register(fn):
+            cls.registry[0:0] = [(test, fn)]
+        return register
+
+    @classmethod
+    def jsonify(cls, obj):
+        for test, conv in cls.registry:
+            if test(obj):
+                return conv(obj)
         return obj
+
+@JsonEncodeRegistry.register(django.db.models.base.Model)
+def modelconv(obj):
+    return type(obj).objects.values().get(id=obj.id)
+
+@JsonEncodeRegistry.register(QuerySet)
+def modelconv(obj):
+    return list(obj.values())
+
+@JsonEncodeRegistry.register((datetime.datetime, datetime.date))
+def modelconv(obj):
+    return str(obj)
+
+def modeltest(obj):
+    # GAH, Django hides the class for lazy translation strings. I HATE IT SO MUCH!!!
+    return type(obj).__name__ == '__proxy__' and type(obj).__module__ =='django.utils.functional'
+@JsonEncodeRegistry.register(test=modeltest)
+def modelconv(obj):
+    return obj.encode("utf-8")
+
+jsonify_models = JsonEncodeRegistry.jsonify
 
 def to_json(obj, default=jsonify_models):
     return django.utils.simplejson.dumps(res, default)
@@ -39,6 +61,8 @@ def json_view(fn):
             res = fn(*arg, **kw)
             if res is None:
                 res = {}
+        except django.core.servers.basehttp.WSGIServerException:
+            raise
         except Exception, e:
             traceback.print_exc()
             res = {'error': {'type': sys.modules[type(e).__module__].__name__ + "." + type(e).__name__,
