@@ -7,7 +7,7 @@ except:
 # Only post_save and pre_save signals are handled as of today
 def autoconnect(cls):
     if not hasattr(cls, 'Meta') or not getattr(cls.Meta, 'abstract', False):
-        for signame in ("pre_save", "post_save"):
+        for signame in ("pre_save", "post_save", "pre_delete", "post_delete"):
             if hasattr(cls, 'on_'+signame):
                 getattr(models.signals, signame).connect(getattr(cls, 'on_'+signame), sender=cls)
 
