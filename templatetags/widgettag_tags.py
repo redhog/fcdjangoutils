@@ -21,6 +21,22 @@ def widget_addjsfile(parser, token):
     return Node()
 
 @register.tag
+def widget_addieonlyjsfile(parser, token):
+    try:
+        tag_name, filename = token.split_contents()
+    except ValueError:
+        raise django.template.TemplateSyntaxError, "%r tag requires one argument" % token.contents.split()[0]
+
+    filename = django.template.Variable(filename)
+
+    class Node(django.template.Node):
+        def render(self, context):
+            fcdjangoutils.widgettagmiddleware.WidgetTagMiddleware.addieonlyjsfile(filename.resolve(context))
+            return ''
+
+    return Node()
+
+@register.tag
 def widget_addcssfile(parser, token):
     try:
         tag_name, filename = token.split_contents()
