@@ -35,18 +35,21 @@ def to_json(obj, default=jsonify_models):
 def json_view(fn):
     """View decorator for views that return pure JSON"""
     def jsonify(*arg, **kw):
+        status = 200
         try:
             res = fn(*arg, **kw)
             if res is None:
                 res = {}
         except Exception, e:
+            status = 500
             traceback.print_exc()
             res = {'error': {'type': sys.modules[type(e).__module__].__name__ + "." + type(e).__name__,
                              'description': str(e),
                              'traceback': traceback.format_exc()}}
             logging.error("%s: %s" % (str(e), res['error']['type']))
         return django.http.HttpResponse(django.utils.simplejson.dumps(res, default=jsonify_models),
-                                        mimetype="text/plain")
+                                        mimetype="text/plain",
+                                        status=status)
     return jsonify
 
 def get_foreign_objects(obj, path):
