@@ -164,6 +164,12 @@ $.extend($.validator.messages, {
   min : $.validator.format(gettext("Please enter a value greater than or equal to {0}."))
 });
 
+/* Create a number type that accepts both ',' and '.' as a decimal separator. */
+$.validator.addMethod("uninumber", function(value, element) {
+  return this.optional(element) || /^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:[.,]\d+)?$/.test(value)
+}, gettext("Please enter a valid number."));
+
+
 fcdjangoutils.findFirst = function(collection, test) {
   var res = null;
   $.each(collection, function(key, value) {
@@ -189,3 +195,6 @@ fcdjangoutils.findLast = function(collection, test) {
 fcdjangoutils.template = function(name) {
   return $('.template .' + name).html().replace(/\.\.\./g, fcdjangoutils.itemIdx++);
 };
+
+
+
