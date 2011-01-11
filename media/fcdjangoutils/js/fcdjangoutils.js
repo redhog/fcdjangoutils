@@ -9,9 +9,9 @@ String.prototype.format = function() {
   var input = String(this);  // make sure we are operating on a string ('this' is an 'object' in IE)
 
   while (idx < input.length) {
-    switch (input[idx]) {
+    switch (input.charAt(idx)) {
     case '%':
-      switch (input[idx + 1]) {
+      switch (input.charAt(idx + 1)) {
       case '%':
         res += '%';
         idx += 2;
@@ -28,24 +28,24 @@ String.prototype.format = function() {
 
         var name = input.substr(idx + 2, end - idx - 2);
         idx = end + 1;
-        switch (input[idx]) {
+        switch (input.charAt(idx)) {
         case 's':
           res += (new String(arguments[0][name])).toString();
           idx++;
           break;
 
         default:
-          throw "Unsupported format option: '" + input[idx] + "'";
+          throw "Unsupported format option: '" + input.charAt(idx) + "'";
 
         }
         break;
       default:
-        throw "Unsupported format option: '" + input[idx + 1] + "'";
+        throw "Unsupported format option: '" + input.charAt(idx + 1) + "'";
       }
       break;
 
     default:
-      res += input[idx];
+      res += input.charAt(idx);
       idx++;
       break;
     }
