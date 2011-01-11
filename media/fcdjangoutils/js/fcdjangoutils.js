@@ -196,5 +196,40 @@ fcdjangoutils.template = function(name) {
   return $('.template .' + name).html().replace(/\.\.\./g, fcdjangoutils.itemIdx++);
 };
 
+fcdjangoutils.Timer = function() {
+  this.interval=0;
+
+  this.start = function(){
+    this.stopTime = null;
+    this.startTime = (new Date().getTime());
+    return this;
+  };
+
+  this.stop = function(){
+    if(!this.startTime){
+      this.stopTime = null;
+      } else {
+	this.stopTime = (new Date().getTime());
+      this.interval += (this.stopTime - this.startTime);
+    }
+    return this;
+  };
+
+  this.time = function(){
+    if(!this.startTime) {
+      return null;
+    }
+    if(!this.stopTime) {
+      this.stop();
+    }
+    return this.interval;
+  };
+
+  this.reset = function(){
+    this.interval = 0;
+    return this.time();
+  };
+
+};
 
 
