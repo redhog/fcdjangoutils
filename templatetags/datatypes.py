@@ -48,6 +48,13 @@ def expandforeign_filter(objs, foreign_key_col):
     with Timer('exportforeign'):
         return fcdjangoutils.jsonview.expand_foreign_key(objs, foreign_key_col)
 
+@register.filter
+def handle_none(obj, replacement='-'):
+    if obj is None:
+        return replacement
+    return obj
+        
+
 register.filter('expandforeign', expandforeign_filter)
 register.filter('jsonify', jsonify_filter)
 register.filter('nth', nth_filter)
