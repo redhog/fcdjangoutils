@@ -20,6 +20,31 @@ register = template.Library()
 def duration(duration):
     return '%d:%02d' % (duration/60, duration%60)
 
+
+@register.filter
+def duration_verbose(duration):
+    hours = int(math.floor(duration/3600));
+    minutes = int(math.floor((duration%3600)/60));
+    seconds = int(math.floor(duration%60));
+
+    res = ""
+    first = True
+    if hours != 0:
+        res += _("%d hours") % hours;
+        first = False
+
+    if minutes != 0:
+        if not first: res += ", "
+        res += _("%d min") % hours;
+        first = False
+
+    if seconds != 0:
+        if not first: res += ", "
+        res += _("%d sec") % seconds;
+
+    #return '%d:%02d' % (duration/60, duration%60)
+    return res
+
 @register.filter
 def duration_diff(dd):
     if dd == 0:
