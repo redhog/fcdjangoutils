@@ -35,7 +35,7 @@ def duration_verbose(duration):
 
     if minutes != 0:
         if not first: res += ", "
-        res += _("%d min") % hours;
+        res += _("%d min") % minutes;
         first = False
 
     if seconds != 0:
