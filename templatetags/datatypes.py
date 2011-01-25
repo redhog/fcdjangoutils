@@ -10,6 +10,7 @@ import django.db.models.base
 import fcdjangoutils.jsonview
 from django.utils.safestring import mark_safe
 from fcdjangoutils.timer import Timer
+import math
 
 register = template.Library()
 
@@ -48,6 +49,9 @@ def expandforeign_filter(objs, foreign_key_col):
     with Timer('exportforeign'):
         return fcdjangoutils.jsonview.expand_foreign_key(objs, foreign_key_col)
 
+def floor_filter(obj):
+    return math.floor(obj)
+
 @register.filter
 def handle_none(obj, replacement='-'):
     if obj is None:
@@ -62,4 +66,5 @@ register.filter('eachnth', eachnth_filter)
 register.filter('sum', sum_filter)
 register.filter('separateminus', separateminus_filter)
 register.filter('aadd', aadd_filter)
+register.filter('floor', floor_filter)
 
