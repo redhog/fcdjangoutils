@@ -7,33 +7,47 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-12-22 16:04-0500\n"
-"PO-Revision-Date: 2010-12-22 22:08+0100\n"
+"POT-Creation-Date: 2011-01-25 12:22-0500\n"
+"PO-Revision-Date: 2011-01-25 10:52+0100\n"
 "Last-Translator: Reidar Øksnevad <reidar.oksnevad@freecode.no>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: templatetags/time_tags.py:26
+#: templatetags/time_tags.py:33
+#, python-format
+msgid "%d hours"
+msgstr "%d timer"
+
+#: templatetags/time_tags.py:38
+#, python-format
+msgid "%d min"
+msgstr "%d min"
+
+#: templatetags/time_tags.py:43
+#, python-format
+msgid "%d sec"
+msgstr "%d sek"
+
+#: templatetags/time_tags.py:51
 msgid "No change"
 msgstr "Ingen forandring"
 
-#: templatetags/time_tags.py:28
+#: templatetags/time_tags.py:53
 msgid "better"
 msgstr "bedre"
 
-#: templatetags/time_tags.py:30
+#: templatetags/time_tags.py:55
 msgid "worse"
 msgstr "dårligere"
 
-#: templatetags/time_tags.py:35
+#: templatetags/time_tags.py:60
 #, python-format
 msgid "%d minutes"
-msgstr "%d minutter"
+msgstr "%d min"
 
-#: templatetags/time_tags.py:37
+#: templatetags/time_tags.py:62
 #, python-format
 msgid "%d seconds"
-msgstr "%d sekunder"
-
+msgstr "%d sek"
