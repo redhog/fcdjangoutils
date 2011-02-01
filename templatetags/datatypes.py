@@ -11,6 +11,7 @@ import fcdjangoutils.jsonview
 from django.utils.safestring import mark_safe
 from fcdjangoutils.timer import Timer
 import math
+import datetime
 
 register = template.Library()
 
@@ -58,6 +59,20 @@ def handle_none(obj, replacement='-'):
         return replacement
     return obj
         
+@register.filter
+def microseconds_to_timedelta(obj):
+    if not obj: return None
+    return datetime.timedelta(microseconds=float(obj))
+
+@register.filter
+def seconds_to_timedelta(obj):
+    if not obj: return None
+    return datetime.timedelta(seconds=float(obj))
+
+@register.filter
+def days_to_timedelta(obj):
+    if not obj: return None
+    return datetime.timedelta(days=float(obj))
 
 register.filter('expandforeign', expandforeign_filter)
 register.filter('jsonify', jsonify_filter)
