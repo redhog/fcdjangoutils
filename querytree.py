@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 
 key_match_1 = re.compile(r'^(\w+)\.')

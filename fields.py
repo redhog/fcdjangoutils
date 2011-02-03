@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import django.forms
 import django.utils.safestring
 import django.core.urlresolvers

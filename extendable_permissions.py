@@ -1,4 +1,6 @@
-# Note, this library is free software
+# -*- coding: utf-8 -*-
+
+# This library is free software
 # Copyright 2010 FreeCode AS
 # Licensed under the MIT license
 
