@@ -18,11 +18,15 @@ register = template.Library()
 
 @register.filter
 def duration(duration):
+    if duration is None:
+        return '-'
     return '%d:%02d' % (duration/60, duration%60)
 
 
 @register.filter
 def duration_verbose(duration):
+    if duration is None:
+        return '-'
     hours = int(math.floor(duration/3600));
     minutes = int(math.floor((duration%3600)/60));
     seconds = int(math.floor(duration%60));
@@ -47,6 +51,8 @@ def duration_verbose(duration):
 
 @register.filter
 def duration_diff(dd):
+    if dd is None:
+        return '-'
     if dd == 0:
         return _("No change")
     if dd > 0:
