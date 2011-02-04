@@ -11,6 +11,23 @@ from django.db.models.query import QuerySet
 import datetime
 import django.utils.functional
 
+class JsonDecodeRegistry(object):
+    registry = {}
+
+    @classmethod
+    def register(cls, class_hint):
+        def register(fn):
+            cls.registry[class_hint] = fn
+        return register
+
+    @classmethod
+    def objectify(cls, obj):
+        # FIXME: Is there a better/faster way to do this using sets?
+        for key, fn in cls.registry.iteritems():
+            if key in obj:
+                return fn(obj)
+        return obj
+
 class JsonEncodeRegistry(object):
     registry = []
 
@@ -49,10 +66,13 @@ def modeltest(obj):
 def modelconv(obj):
     return obj.encode("utf-8")
 
-jsonify_models = JsonEncodeRegistry.jsonify
+#jsonify_models = JsonEncodeRegistry.jsonify
 
-def to_json(obj, default=jsonify_models):
-    return django.utils.simplejson.dumps(res, default)
+def from_json(jsonstr, objectify=JsonDecodeRegistry.objectify):
+    return django.utils.simplejson.loads(jsonstr, object_hook=objectify)
+
+def to_json(obj, jsonify=JsonEncodeRegistry.jsonify):
+    return django.utils.simplejson.dumps(obj, default=jsonify)
 
 def json_view(fn):
     """View decorator for views that return pure JSON"""
