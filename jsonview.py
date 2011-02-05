@@ -14,71 +14,79 @@ import django.utils.functional
 class JsonDecodeRegistry(object):
     registry = {}
 
+    def __init__(self, **kw):
+        for key, value in kw.iteritems():
+            setattr(self, key, value)
+
     @classmethod
     def register(cls, class_hint):
         def register(fn):
             cls.registry[class_hint] = fn
         return register
 
-    @classmethod
-    def objectify(cls, obj):
+    def objectify(self, obj):
         # FIXME: Is there a better/faster way to do this using sets?
-        for key, fn in cls.registry.iteritems():
+        for key, fn in self.registry.iteritems():
             if key in obj:
-                return fn(obj)
+                return fn(self, obj)
         return obj
 
 class JsonEncodeRegistry(object):
     registry = []
 
+    def __init__(self, **kw):
+        for key, value in kw.iteritems():
+            setattr(self, key, value)
+
     @classmethod
     def register(cls, instof=None, test=None):
         if test is None:
-            def test(obj):
+            def test(self, obj):
                 return isinstance(obj, instof)
         def register(fn):
             cls.registry[0:0] = [(test, fn)]
         return register
 
-    @classmethod
-    def jsonify(cls, obj):
-        for test, conv in cls.registry:
-            if test(obj):
-                return conv(obj)
+    def jsonify(self, obj):
+        for test, conv in self.registry:
+            if test(self, obj):
+                return conv(self, obj)
         return obj
 
 @JsonEncodeRegistry.register(django.db.models.base.Model)
-def modelconv(obj):
+def modelconv(self, obj):
     return type(obj).objects.values().get(id=obj.id)
 
 @JsonEncodeRegistry.register(QuerySet)
-def modelconv(obj):
+def modelconv(self, obj):
     return list(obj.values())
 
 @JsonEncodeRegistry.register((datetime.datetime, datetime.date))
-def modelconv(obj):
+def modelconv(self, obj):
     return str(obj)
 
-def modeltest(obj):
+def modeltest(self, obj):
     # GAH, Django hides the class for lazy translation strings. I HATE IT SO MUCH!!!
     return type(obj).__name__ == '__proxy__' and type(obj).__module__ =='django.utils.functional'
 @JsonEncodeRegistry.register(test=modeltest)
-def modelconv(obj):
+def modelconv(self, obj):
     return obj.encode("utf-8")
 
 #jsonify_models = JsonEncodeRegistry.jsonify
 
-def from_json(jsonstr, objectify=JsonDecodeRegistry.objectify):
-    return django.utils.simplejson.loads(jsonstr, object_hook=objectify)
+def from_json(jsonstr, **kw):
+    reg = JsonDecodeRegistry(**kw)
+    return django.utils.simplejson.loads(jsonstr, object_hook=reg.objectify)
 
-def to_json(obj, jsonify=JsonEncodeRegistry.jsonify):
-    return django.utils.simplejson.dumps(obj, default=jsonify)
+def to_json(obj, **kw):
+    reg = JsonEncodeRegistry(**kw)
+    return django.utils.simplejson.dumps(obj, default=reg.jsonify)
 
 def json_view(fn):
     """View decorator for views that return pure JSON"""
-    def jsonify(*arg, **kw):
+    def jsonify(request, *arg, **kw):
         try:
-            res = fn(*arg, **kw)
+            res = fn(request, *arg, **kw)
             if res is None:
                 res = {}
         except django.core.servers.basehttp.WSGIServerException:
@@ -89,7 +97,7 @@ def json_view(fn):
                              'description': str(e),
                              'traceback': traceback.format_exc()}}
             logging.error("%s: %s" % (str(e), res['error']['type']))
-        return django.http.HttpResponse(django.utils.simplejson.dumps(res, default=jsonify_models),
+        return django.http.HttpResponse(django.utils.simplejson.dumps(res, default=JsonEncodeRegistry(**getattr(request, 'json_params', {})).jsonify),
                                         mimetype="text/plain")
     return jsonify
 
