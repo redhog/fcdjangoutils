@@ -15,7 +15,7 @@ Obj.prototype.subclass = function () {
   return cls;
 };
 Obj.prototype.init = function () {}
-Obj.prototype.instanciate = function () {
+Obj.prototype.instantiate = function () {
   var obj = this.create();
   obj.init.apply(obj, arguments);
   return obj;
