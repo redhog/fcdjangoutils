@@ -81,6 +81,9 @@ def days_to_timedelta(obj):
 
 @register.filter
 def format_timedelta(d, fmt = "%(years)s years %(weeks)s weeks %(hours).2d:%(minutes).2d:%(seconds).2d.%(milliseconds).3d%(microseconds).3d"):
+    if d is None or fmt is None:
+        return None
+
     info = {}
 
     info["years"], remainder = divmod(d.days, 365)  
