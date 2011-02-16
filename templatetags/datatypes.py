@@ -74,6 +74,25 @@ def days_to_timedelta(obj):
     if not obj: return None
     return datetime.timedelta(days=float(obj))
 
+@register.filter
+def days_to_timedelta(obj):
+    if not obj: return None
+    return datetime.timedelta(days=float(obj))
+
+@register.filter
+def format_timedelta(d, fmt = "%(years)s years %(weeks)s weeks %(hours).2d:%(minutes).2d:%(seconds).2d.%(milliseconds).3d%(microseconds).3d"):
+    info = {}
+
+    info["years"], remainder = divmod(d.days, 365)  
+    info["weeks"], info["days"] = divmod(remainder, 7)   
+
+    info["hours"], remainder = divmod(d.seconds, 3600)  
+    info["minutes"], info["seconds"] = divmod(remainder, 60)   
+
+    info["milliseconds"], info["microseconds"] = divmod(d.microseconds, 1000)  
+
+    return fmt % info
+
 register.filter('expandforeign', expandforeign_filter)
 register.filter('jsonify', jsonify_filter)
 register.filter('nth', nth_filter)

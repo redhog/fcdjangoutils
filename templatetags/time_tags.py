@@ -11,6 +11,7 @@ import fcdjangoutils.jsonview
 from django.utils.safestring import mark_safe
 from fcdjangoutils.timer import Timer
 from django.utils.translation import ugettext_lazy as _
+import warnings
 
 import math
 
@@ -18,6 +19,7 @@ register = template.Library()
 
 @register.filter
 def duration(duration):
+    warnings.warn("Use templatetags from {% load datatypes %} instead", DeprecationWarning)
     if duration is None:
         return '-'
     return '%d:%02d' % (duration/60, duration%60)
@@ -25,6 +27,7 @@ def duration(duration):
 
 @register.filter
 def duration_verbose(duration):
+    warnings.warn("Use templatetags from {% load datatypes %} instead", DeprecationWarning)
     if duration is None:
         return '-'
     hours = int(math.floor(duration/3600));
