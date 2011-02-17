@@ -66,7 +66,7 @@ fcdjangoutils.formatTimeField = function(value) {
 
 fcdjangoutils.join = function(str, arr) {
   return _.reduce(_.rest(arr), function(prev, val) {
-    return prev + str + val
+    return prev + str + val;
   }, _.first(arr));
 
 };
@@ -167,7 +167,7 @@ $.extend($.validator.messages, {
 
 /* Create a number type that accepts both ',' and '.' as a decimal separator. */
 $.validator.addMethod("uninumber", function(value, element) {
-  return this.optional(element) || /^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:[.,]\d+)?$/.test(value)
+  return this.optional(element) || /^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:[.,]\d+)?$/.test(value);
 }, gettext("Please enter a valid number."));
 
 
