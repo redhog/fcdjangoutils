@@ -70,6 +70,16 @@ def seconds_to_timedelta(obj):
     return datetime.timedelta(seconds=float(obj))
 
 @register.filter
+def minutes_to_timedelta(obj):
+    if not obj: return None
+    return datetime.timedelta(minutes=float(obj))
+
+@register.filter
+def hours_to_timedelta(obj):
+    if not obj: return None
+    return datetime.timedelta(hours=float(obj))
+
+@register.filter
 def days_to_timedelta(obj):
     if not obj: return None
     return datetime.timedelta(days=float(obj))
