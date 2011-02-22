@@ -89,6 +89,8 @@ def format_timedelta(d, fmt = "%(years)s years %(weeks)s weeks %(hours).2d:%(min
     info["years"], remainder = divmod(d.days, 365)  
     info["weeks"], info["days"] = divmod(remainder, 7)   
 
+    info["total_hours"]= (divmod(d.seconds, 3600)[0]) + d.days*24
+
     info["hours"], remainder = divmod(d.seconds, 3600)  
     info["minutes"], info["seconds"] = divmod(remainder, 60)   
 
