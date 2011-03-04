@@ -233,4 +233,15 @@ fcdjangoutils.Timer = function() {
 
 };
 
-
+$.fn.fcProgressbar = function(options) {
+  this.progressbar(options);
+  if(!('text' in options)){
+    options.text=options.value;
+  }
+  if(options.value > 55){
+    $(this).find("div").html($("<span class='inside'></span>").text(options.text));
+  }
+  else {
+    $(this).find("div").after($("<div class='outer-div'></div>").html($("<span class='outside'></span>").text(options.text)));
+  }
+};
