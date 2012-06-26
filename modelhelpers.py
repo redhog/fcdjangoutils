@@ -6,7 +6,10 @@ class SubclasModelMixin(object):
     def get_model_subclass_relations(cls):
         res = {}
         for name in dir(cls):
-            attr = getattr(cls, name)
+            try:
+                attr = getattr(cls, name)
+            except:
+                attr = None
             if isinstance(attr, django.db.models.fields.related.SingleRelatedObjectDescriptor) and issubclass(attr.related.model, cls) and cls is not attr.related.model:
                 res[name] = attr.related.model
         return res
@@ -15,7 +18,10 @@ class SubclasModelMixin(object):
     def get_model_superclass_relations(cls):
         res = {}
         for name in dir(cls):
-            attr = getattr(cls, name)
+            try:
+                attr = getattr(cls, name)
+            except:
+                attr = None
             if isinstance(attr, django.db.models.fields.related.ReverseSingleRelatedObjectDescriptor) and issubclass(cls, attr.field.rel.to) and cls is not attr.field.rel.to:
                 res[name] = attr.field.rel.to
         return res
