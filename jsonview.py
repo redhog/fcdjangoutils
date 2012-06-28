@@ -13,35 +13,82 @@ from django.db.models.query import QuerySet
 import datetime
 import django.utils.functional
 
-def jsonify_models(obj):
-    """default-handler for simplejson dump that serializes Django
-    model objects and query sets as well as some other random bits and
-    pieces like dates"""
-    
-    # This will perform an extra DB lookup. Inefficient and stupid, but it should never be used anyway...
-    if isinstance(obj, django.db.models.base.Model):
-        return type(obj).objects.values().get(id=obj.id)
-    elif isinstance(obj, QuerySet):
-        return list(obj.values())
-    elif isinstance(obj, (datetime.datetime, datetime.date)):
-        return str(obj)
-    # GAH, Django hides the class for lazy translation strings. I HATE IT SO MUCH!!!
-    elif type(obj).__name__ == '__proxy__' and type(obj).__module__ =='django.utils.functional' :
-        return obj.encode("utf-8")
-    else:
+class JsonDecodeRegistry(object):
+    registry = {}
+
+    def __init__(self, **kw):
+        for key, value in kw.iteritems():
+            setattr(self, key, value)
+
+    @classmethod
+    def register(cls, class_hint):
+        def register(fn):
+            cls.registry[class_hint] = fn
+        return register
+
+    def objectify(self, obj):
+        if "__jsonclass__" in value and len(value["__jsonclass__"]) and value["__jsonclass__"][0] in self.registry:
+            return self.registry[value["__jsonclass__"][0]](self, obj)
         return obj
 
-def to_json(obj, default=jsonify_models):
-    return django.utils.simplejson.dumps(obj, default)
+class JsonEncodeRegistry(object):
+    registry = []
+
+    def __init__(self, **kw):
+        for key, value in kw.iteritems():
+            setattr(self, key, value)
+
+    @classmethod
+    def register(cls, instof=None, test=None):
+        if test is None:
+            def test(self, obj):
+                return isinstance(obj, instof)
+        def register(fn):
+            cls.registry[0:0] = [(test, fn)]
+        return register
+
+    def jsonify(self, obj):
+        for test, conv in self.registry:
+            if test(self, obj):
+                return conv(self, obj)
+        return obj
+
+@JsonEncodeRegistry.register(django.db.models.base.Model)
+def modelconv(self, obj):
+    return type(obj).objects.values().get(id=obj.id)
+
+@JsonEncodeRegistry.register(QuerySet)
+def modelconv(self, obj):
+    return list(obj.values())
+
+@JsonEncodeRegistry.register((datetime.datetime, datetime.date))
+def modelconv(self, obj):
+    return str(obj)
+
+def modeltest(self, obj):
+    # GAH, Django hides the class for lazy translation strings. I HATE IT SO MUCH!!!
+    return type(obj).__name__ == '__proxy__' and type(obj).__module__ =='django.utils.functional'
+@JsonEncodeRegistry.register(test=modeltest)
+def modelconv(self, obj):
+    return obj.encode("utf-8")
+
+def from_json(jsonstr, **kw):
+    reg = JsonDecodeRegistry(**kw)
+    return django.utils.simplejson.loads(jsonstr, object_hook=reg.objectify)
+
+def to_json(obj, **kw):
+    reg = JsonEncodeRegistry(**kw)
+    return django.utils.simplejson.dumps(obj, default=reg.jsonify)
 
 def json_view(fn):
     """View decorator for views that return pure JSON"""
-    def jsonify(*arg, **kw):
-        status = 200
+    def jsonify(request, *arg, **kw):
         try:
-            res = fn(*arg, **kw)
+            res = fn(request, *arg, **kw)
             if res is None:
                 res = {}
+        except django.core.servers.basehttp.WSGIServerException:
+            raise
         except Exception, e:
             status = 500
             traceback.print_exc()
@@ -49,7 +96,8 @@ def json_view(fn):
                              'description': str(e),
                              'traceback': traceback.format_exc()}}
             logging.error("%s: %s" % (str(e), res['error']['type']))
-        return django.http.HttpResponse(django.utils.simplejson.dumps(res, default=jsonify_models),
+
+        return django.http.HttpResponse(django.utils.simplejson.dumps(res, default=JsonEncodeRegistry(**getattr(request, 'json_params', {})).jsonify),
                                         mimetype="text/plain",
                                         status=status)
     return jsonify
