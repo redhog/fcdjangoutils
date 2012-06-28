@@ -7,8 +7,12 @@ from django.utils.simplejson import dumps, loads, JSONEncoder
 import dateutil.parser
 import datetime
 import django.db.models
-import idmapper.models
+try:
+    import idmapper.models
+except:
+    pass
 import base64
+import jsonview
 
 class ModelLinkWidget(django.forms.Select):
     def render(self, name, value, attrs=None, choices=()):
@@ -34,31 +38,11 @@ class JsonField(django.db.models.Field):
     def value_to_string(self, obj): 
         return self.get_prep_value(self._get_val_from_obj(obj)) 
     def get_prep_value(self, value):
-        stream = StringIO.StringIO() 
-        django.utils.simplejson.dump(value, stream, default=self.json_encoder) 
-        value = stream.getvalue() 
-        stream.close() 
-        return value 
-        #~ return None 
+        return jsonview.to_json(value) 
     def to_python(self, value): 
         if isinstance(value, (str, unicode)): 
-            value = StringIO.StringIO(value) 
-            return django.utils.simplejson.load(value, object_hook=self.json_decoder) 
+            return jsonview.from_json(value)
         return value 
-    def json_encoder(self, value):
-        if type(value) is datetime.date:
-            return {"__jsonclass__": ["datetime.date"], "value": value.isoformat()}
-        elif type(value) is datetime.datetime:
-            return {"__jsonclass__": ["datetime.datetime"], "value": value.isoformat()}
-        else:
-            return value
-    def json_decoder(self, value):
-        if "__jsonclass__" in value:
-            if value["__jsonclass__"][0] == "datetime.date":
-                value = dateutil.parser.parse(value['value']).date()
-            elif value["__jsonclass__"][0] == "datetime.datetime":
-                value = dateutil.parser.parse(value['value'])
-        return value
 
 class Base64Field(django.db.models.TextField):
     def contribute_to_class(self, cls, name):

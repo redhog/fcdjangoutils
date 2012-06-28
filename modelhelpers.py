@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import django.db.models.fields.related
 import django.db.models
-import idmapper.models
+try:
+    import idmapper.models
+except:
+    pass
 import base64
 
 class SubclasModelMixin(object):
