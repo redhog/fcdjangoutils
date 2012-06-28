@@ -30,8 +30,7 @@ class JsonField(django.db.models.Field):
         return "TextField" 
     def value_to_string(self, obj): 
         return self.get_prep_value(self._get_val_from_obj(obj)) 
-    def get_prep_value(self, value): 
-        #~ if value: 
+    def get_prep_value(self, value):
         stream = StringIO.StringIO() 
         django.utils.simplejson.dump(value, stream, default=self.json_encoder) 
         value = stream.getvalue() 
