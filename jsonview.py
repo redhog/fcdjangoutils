@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import settings
 import sys
 import traceback
 import django.db.models.base
@@ -107,8 +108,10 @@ def json_view(fn):
             status = 500
             traceback.print_exc()
             res = {'error': {'type': sys.modules[type(e).__module__].__name__ + "." + type(e).__name__,
-                             'description': str(e),
-                             'traceback': traceback.format_exc()}}
+                             'description': str(e)}}
+            if settings.DEBUG == True:
+                res['traceback'] = traceback.format_exc()
+
             logging.error("%s: %s" % (str(e), res['error']['type']))
 
         return django.http.HttpResponse(django.utils.simplejson.dumps(res, default=JsonEncodeRegistry(**getattr(request, 'json_params', {})).jsonify),
