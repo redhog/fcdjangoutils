@@ -11,9 +11,14 @@ def autoconnect(cls):
             if hasattr(cls, 'on_'+signame):
                 getattr(django.db.models.signals, signame).connect(getattr(cls, 'on_'+signame), sender=cls)
         for key in dir(cls):
-            if isinstance(getattr(cls, key), (django.db.models.fields.related.ReverseManyRelatedObjectsDescriptor, django.db.models.fields.related.ManyRelatedObjectsDescriptor)):
-                if hasattr(cls, 'on_m2m_changed_for_'+key):
-                    getattr(django.db.models.signals, 'm2m_changed').connect(getattr(cls, 'on_m2m_changed_for_'+key), sender=getattr(cls, key).through)
+            try:
+                value = getattr(cls, key)
+            except:
+                pass
+            else:
+                if isinstance(value, (django.db.models.fields.related.ReverseManyRelatedObjectsDescriptor, django.db.models.fields.related.ManyRelatedObjectsDescriptor)):
+                    if hasattr(cls, 'on_m2m_changed_for_'+key):
+                        getattr(django.db.models.signals, 'm2m_changed').connect(getattr(cls, 'on_m2m_changed_for_'+key), sender=value.through)
    
 
 class SignalAutoConnectModel(django.db.models.Model):
