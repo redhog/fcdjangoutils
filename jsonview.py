@@ -12,6 +12,7 @@ from django.db.models.query import QuerySet
 import datetime
 import dateutil
 import django.utils.functional
+import logging
 
 class JsonDecodeRegistry(object):
     registry = {}
