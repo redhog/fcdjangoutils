@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import settings
+from django.conf import settings
 import sys
 import traceback
 import django.db.models.base
