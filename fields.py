@@ -60,8 +60,10 @@ class JsonField(django.db.models.Field):
         return self.get_prep_value(self._get_val_from_obj(obj)) 
     def get_prep_value(self, value):
         return jsonview.to_json(value) 
-    def to_python(self, value): 
-        if isinstance(value, (str, unicode)): 
+    def to_python(self, value):
+        if isinstance(value, (str, unicode)):
+            if not value.strip():
+                return None
             return jsonview.from_json(value)
         return value 
     def formfield(self, **kwargs):
