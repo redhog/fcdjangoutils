@@ -87,6 +87,8 @@ def modelconv(self, obj):
     return obj.encode("utf-8")
 
 def from_json(jsonstr, **kw):
+    # Special case, but this is what you generally want...
+    if not jsonstr.strip(): return None
     reg = JsonDecodeRegistry(**kw)
     return django.utils.simplejson.loads(jsonstr, object_hook=reg.objectify)
 
