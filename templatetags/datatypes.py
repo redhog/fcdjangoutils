@@ -44,7 +44,7 @@ def aadd_filter(value1, value2):
 
 def jsonify_filter(obj):
     with Timer('jsonify'):
-        return mark_safe(simplejson.dumps(obj, default=fcdjangoutils.jsonview.jsonify_models))
+        return mark_safe(fcdjangoutils.jsonview.to_json(obj))
 
 def expandforeign_filter(objs, foreign_key_col):
     with Timer('exportforeign'):
@@ -116,4 +116,3 @@ register.filter('sum', sum_filter)
 register.filter('separateminus', separateminus_filter)
 register.filter('aadd', aadd_filter)
 register.filter('floor', floor_filter)
-
