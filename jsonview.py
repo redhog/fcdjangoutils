@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+from django.conf import settings
 import sys
 import traceback
 import django.db.models.base
@@ -5,11 +8,12 @@ import django.core.serializers
 import django.core.serializers.base
 import django.http
 import django.utils.simplejson
-from jogging import logging
 from StringIO import StringIO
 from django.db.models.query import QuerySet
 import datetime
+import dateutil
 import django.utils.functional
+import logging
 
 class JsonDecodeRegistry(object):
     registry = {}
@@ -25,10 +29,8 @@ class JsonDecodeRegistry(object):
         return register
 
     def objectify(self, obj):
-        # FIXME: Is there a better/faster way to do this using sets?
-        for key, fn in self.registry.iteritems():
-            if key in obj:
-                return fn(self, obj)
+        if "__jsonclass__" in obj and len(obj["__jsonclass__"]) and obj["__jsonclass__"][0] in self.registry:
+            return self.registry[obj["__jsonclass__"][0]](self, obj)
         return obj
 
 class JsonEncodeRegistry(object):
@@ -61,9 +63,21 @@ def modelconv(self, obj):
 def modelconv(self, obj):
     return list(obj.values())
 
-@JsonEncodeRegistry.register((datetime.datetime, datetime.date))
+@JsonEncodeRegistry.register(datetime.date)
 def modelconv(self, obj):
-    return str(obj)
+    return {"__jsonclass__": ["datetime.date"], "value": obj.isoformat()}
+
+@JsonDecodeRegistry.register("datetime.date")
+def modelconv(self, obj):
+    return dateutil.parser.parse(obj['value']).date()
+
+@JsonEncodeRegistry.register(datetime.datetime)
+def modelconv(self, obj):
+    return {"__jsonclass__": ["datetime.datetime"], "value": obj.isoformat()}
+
+@JsonDecodeRegistry.register("datetime.datetime")
+def modelconv(self, obj):
+    return dateutil.parser.parse(obj['value'])
 
 def modeltest(self, obj):
     # GAH, Django hides the class for lazy translation strings. I HATE IT SO MUCH!!!
@@ -72,9 +86,9 @@ def modeltest(self, obj):
 def modelconv(self, obj):
     return obj.encode("utf-8")
 
-#jsonify_models = JsonEncodeRegistry.jsonify
-
 def from_json(jsonstr, **kw):
+    # Special case, but this is what you generally want...
+    if not jsonstr.strip(): return None
     reg = JsonDecodeRegistry(**kw)
     return django.utils.simplejson.loads(jsonstr, object_hook=reg.objectify)
 
@@ -85,6 +99,7 @@ def to_json(obj, **kw):
 def json_view(fn):
     """View decorator for views that return pure JSON"""
     def jsonify(request, *arg, **kw):
+        status = 200
         try:
             res = fn(request, *arg, **kw)
             if res is None:
@@ -92,13 +107,18 @@ def json_view(fn):
         except django.core.servers.basehttp.WSGIServerException:
             raise
         except Exception, e:
+            status = 500
             traceback.print_exc()
             res = {'error': {'type': sys.modules[type(e).__module__].__name__ + "." + type(e).__name__,
-                             'description': str(e),
-                             'traceback': traceback.format_exc()}}
+                             'description': str(e)}}
+            if settings.DEBUG == True:
+                res['traceback'] = traceback.format_exc()
+
             logging.error("%s: %s" % (str(e), res['error']['type']))
+
         return django.http.HttpResponse(django.utils.simplejson.dumps(res, default=JsonEncodeRegistry(**getattr(request, 'json_params', {})).jsonify),
-                                        mimetype="text/plain")
+                                        mimetype="text/plain",
+                                        status=status)
     return jsonify
 
 def get_foreign_objects(obj, path):

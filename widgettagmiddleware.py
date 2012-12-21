@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import threading
 import re
 
@@ -44,6 +45,10 @@ class WidgetTagMiddleware(object):
     @classmethod
     def addjsfile(cls, filename):
         cls.add("head.javascript", filename, "<script id='%s' language='javascript' type='text/javascript' src='%s'></script>" % (filename, filename,))
+
+    @classmethod
+    def addieonlyjsfile(cls, filename):
+        cls.add("head.javascript", filename, "<!--[if IE]><script id='%s' language='javascript' type='text/javascript' src='%s'></script><![endif]-->" % (filename, filename,))
 
     @classmethod
     def addcssfile(cls, filename):
