@@ -21,6 +21,22 @@ def widget_addjsfile(parser, token):
     return Node()
 
 @register.tag
+def widget_addieonlyjsfile(parser, token):
+    try:
+        tag_name, filename = token.split_contents()
+    except ValueError:
+        raise django.template.TemplateSyntaxError, "%r tag requires one argument" % token.contents.split()[0]
+
+    filename = django.template.Variable(filename)
+
+    class Node(django.template.Node):
+        def render(self, context):
+            fcdjangoutils.widgettagmiddleware.WidgetTagMiddleware.addieonlyjsfile(filename.resolve(context))
+            return ''
+
+    return Node()
+
+@register.tag
 def widget_addcssfile(parser, token):
     try:
         tag_name, filename = token.split_contents()
@@ -94,4 +110,33 @@ def widget_adddialog(parser, token):
             return ''
  
     parser.delete_first_token()
+    return Node()
+
+
+@register.tag
+def widget_uniquename(parser, token):
+    """Usage: {% widget_uniquename varname "group" %}"""
+
+    try:
+        tag_name, varname, group = token.split_contents()
+    except ValueError:
+        raise django.template.TemplateSyntaxError, "%r tag requires one argument" % token.contents.split()[0]
+
+    groupvar = django.template.Variable(group)
+
+    class Node(django.template.Node):
+        def render(self, context):
+            request = context['request']
+            group = groupvar.resolve(context)
+
+            if not hasattr(request, 'widget_uniquename'):
+                request.widget_uniquename = {}
+            if group not in request.widget_uniquename:
+                request.widget_uniquename[group] = 0
+
+            context[varname] = request.widget_uniquename[group]
+            request.widget_uniquename[group] += 1
+
+            return ''
+
     return Node()

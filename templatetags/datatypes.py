@@ -10,6 +10,8 @@ import django.db.models.base
 import fcdjangoutils.jsonview
 from django.utils.safestring import mark_safe
 from fcdjangoutils.timer import Timer
+import math
+import datetime
 
 register = template.Library()
 
@@ -42,11 +44,69 @@ def aadd_filter(value1, value2):
 
 def jsonify_filter(obj):
     with Timer('jsonify'):
-        return mark_safe(simplejson.dumps(obj, default=fcdjangoutils.jsonview.jsonify_models))
+        return mark_safe(fcdjangoutils.jsonview.to_json(obj))
 
 def expandforeign_filter(objs, foreign_key_col):
     with Timer('exportforeign'):
         return fcdjangoutils.jsonview.expand_foreign_key(objs, foreign_key_col)
+
+def floor_filter(obj):
+    return math.floor(obj)
+
+@register.filter
+def handle_none(obj, replacement='-'):
+    if obj is None:
+        return replacement
+    return obj
+        
+@register.filter
+def microseconds_to_timedelta(obj):
+    if not obj: return None
+    return datetime.timedelta(microseconds=float(obj))
+
+@register.filter
+def seconds_to_timedelta(obj):
+    if not obj: return None
+    return datetime.timedelta(seconds=float(obj))
+
+@register.filter
+def minutes_to_timedelta(obj):
+    if not obj: return None
+    return datetime.timedelta(minutes=float(obj))
+
+@register.filter
+def hours_to_timedelta(obj):
+    if not obj: return None
+    return datetime.timedelta(hours=float(obj))
+
+@register.filter
+def days_to_timedelta(obj):
+    if not obj: return None
+    return datetime.timedelta(days=float(obj))
+
+@register.filter
+def days_to_timedelta(obj):
+    if not obj: return None
+    return datetime.timedelta(days=float(obj))
+
+@register.filter
+def format_timedelta(d, fmt = "%(years)s years %(weeks)s weeks %(hours).2d:%(minutes).2d:%(seconds).2d.%(milliseconds).3d%(microseconds).3d"):
+    if d is None or fmt is None:
+        return None
+
+    info = {}
+
+    info["years"], remainder = divmod(d.days, 365)  
+    info["weeks"], info["days"] = divmod(remainder, 7)   
+
+    info["total_hours"]= (divmod(d.seconds, 3600)[0]) + d.days*24
+
+    info["hours"], remainder = divmod(d.seconds, 3600)  
+    info["minutes"], info["seconds"] = divmod(remainder, 60)   
+
+    info["milliseconds"], info["microseconds"] = divmod(d.microseconds, 1000)  
+
+    return fmt % info
 
 register.filter('expandforeign', expandforeign_filter)
 register.filter('jsonify', jsonify_filter)
@@ -55,4 +115,4 @@ register.filter('eachnth', eachnth_filter)
 register.filter('sum', sum_filter)
 register.filter('separateminus', separateminus_filter)
 register.filter('aadd', aadd_filter)
-
+register.filter('floor', floor_filter)

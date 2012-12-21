@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 from django.db import transaction
 
@@ -10,6 +11,7 @@ class Transaction(object):
         print "Entering a transaction"
         transaction.enter_transaction_management(using=self.db)
         transaction.managed(True, using=self.db)
+        return self
 
     def __exit__(self, a,b,c):
         if a is None:
