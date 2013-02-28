@@ -116,6 +116,9 @@ def json_view(fn):
 
             logging.error("%s: %s" % (str(e), res['error']['type']))
 
+        if isinstance(res, django.http.HttpResponse):
+            return res
+
         return django.http.HttpResponse(django.utils.simplejson.dumps(res, default=JsonEncodeRegistry(**getattr(request, 'json_params', {})).jsonify),
                                         mimetype="text/plain",
                                         status=status)
