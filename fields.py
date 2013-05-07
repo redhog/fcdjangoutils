@@ -7,6 +7,9 @@ from django.utils.simplejson import dumps, loads, JSONEncoder
 import dateutil.parser
 import datetime
 import django.db.models
+import django.utils.functional
+import django.db
+import django.db.models.query
 try:
     import idmapper.models
 except:
@@ -83,3 +86,60 @@ class Base64Field(django.db.models.TextField):
 
     def set_data(self, obj, data):
         setattr(obj, self.field_name, base64.encodestring(data))
+
+
+class WeakForeignKeyDescriptor(object):
+    def __init__(self, related):
+        self.related = related
+
+    def __get__(self, instance, instance_type=None):
+        if instance is None:
+            return self
+
+        return self.related_manager_cls(instance)
+
+    def __set__(self, instance, value):
+        raise ValueError("WeakForeignKey does not support assignement; Assign to the value fields used to define it instead.")
+
+
+    @django.utils.functional.cached_property
+    def related_manager_cls(self):
+        # Dynamically create a class that subclasses the related model's default
+        # manager.
+        superclass = self.related.model._default_manager.__class__
+        related_object_descriptor = self
+
+        class RelatedManager(superclass):
+            def __init__(self, instance):
+                super(RelatedManager, self).__init__()
+                self.core_filters = {'%s__exact' % related_object_descriptor.related.related_field.name:
+                                         getattr(instance, related_object_descriptor.related.db_column)}
+                self.instance = instance
+
+            def get_queryset(self, **db_hints):
+                db = django.db.router.db_for_read(related_object_descriptor.related.rel.to, **db_hints)
+                return django.db.models.query.QuerySet(related_object_descriptor.related.rel.to).using(db).filter(**self.core_filters)
+
+        return RelatedManager
+
+class WeakForeignKey(django.db.models.ForeignKey):
+    """Defines a weak, or fake, foreign key based on an existing field.
+    You must set db_column (and probably want to set to_field too).
+    Usefull to construct joins on non-primary keys."""
+
+    requires_unique_target=False
+
+    def __init__(self, to, db_constraint=False, null=True, blank=True, *arg, **kw):
+        django.db.models.ForeignKey.__init__(self, to, db_constraint=db_constraint, null=null, blank=blank, *arg, **kw)
+
+    def db_type(self, connection):
+        return None
+
+    def contribute_to_class(self, cls, name, virtual_only=False):
+        super(WeakForeignKey, self).contribute_to_class(cls, name, virtual_only=virtual_only)
+        self.field = self
+        setattr(cls, self.name, WeakForeignKeyDescriptor(self))
+
+    def validate(self, value, model_instance):
+        # Did I say this is a weak foreign key? It can't fail...
+        pass
