@@ -114,8 +114,8 @@ class WeakForeignKeyDescriptor(object):
         class RelatedManager(superclass):
             def __init__(self, instance):
                 super(RelatedManager, self).__init__()
-                self.core_filters = {'%s__exact' % related_object_descriptor.related.to_field:
-                                         getattr(instance, related_object_descriptor.related.db_column)}
+                self.core_filters = {'%s__exact' % related_object_descriptor.related.to_fields[0]:
+                                         getattr(instance, related_object_descriptor.related.from_fields[0])}
                 self.instance = instance
 
             def get_queryset(self, **db_hints):
@@ -125,15 +125,20 @@ class WeakForeignKeyDescriptor(object):
         return RelatedManager
 
 class WeakForeignKey(django.db.models.ManyToManyField):
-    """Defines a weak, or fake, foreign key based on an existing field.
-    You must set db_column (and probably want to set to_field too).
-    Usefull to construct joins on non-primary keys."""
+    """Defines a weak, or fake, foreign key based on existing fields.
 
-    def __init__(self, to, to_field, *arg, **kw):
-        self.to_field = to_field
+    You must set
+      from_field - the field in this model to join on
+      to - the model to join to
+      to_field - the field in the other model to join on
+
+    Usefull to construct joins on non-primary keys. Note that all joins are done with equal as join condition.
+    """
+
+    def __init__(self, from_field, to, to_field, *arg, **kw):
         django.db.models.ManyToManyField.__init__(self, to, *arg, **kw)
-        self.from_fields = [self.db_column]
-        self.to_fields = [self.to_field]
+        self.from_fields = [from_field]
+        self.to_fields = [to_field]
 
     def resolve_related_fields(self):
         if len(self.from_fields) < 1 or len(self.from_fields) != len(self.to_fields):
@@ -188,8 +193,8 @@ class WeakForeignKey(django.db.models.ManyToManyField):
 
     def contribute_to_related_class(self, cls, related):
         related.to = self.model
-        related.db_column = self.to_field
-        related.to_field = self.db_column
+        related.from_fields = self.to_fields
+        related.to_fields = self.from_fields
         setattr(cls, related.get_accessor_name(), WeakForeignKeyDescriptor(related))
 
     def validate(self, value, model_instance):
