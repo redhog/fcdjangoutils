@@ -7,6 +7,11 @@ from django.utils.simplejson import dumps, loads, JSONEncoder
 import dateutil.parser
 import datetime
 import django.db.models
+import django.utils.functional
+import django.db
+import django.db.models.query
+import django.db.models.fields.related
+import django.db.models.related
 try:
     import idmapper.models
 except:
@@ -83,3 +88,115 @@ class Base64Field(django.db.models.TextField):
 
     def set_data(self, obj, data):
         setattr(obj, self.field_name, base64.encodestring(data))
+
+
+class WeakForeignKeyDescriptor(object):
+    def __init__(self, related):
+        self.related = related
+
+    def __get__(self, instance, instance_type=None):
+        if instance is None:
+            return self
+
+        return self.related_manager_cls(instance)
+
+    def __set__(self, instance, value):
+        raise ValueError("WeakForeignKey does not support assignement; Assign to the value fields used to define it instead.")
+
+
+    @django.utils.functional.cached_property
+    def related_manager_cls(self):
+        # Dynamically create a class that subclasses the related model's default
+        # manager.
+        superclass = self.related.model._default_manager.__class__
+        related_object_descriptor = self
+
+        class RelatedManager(superclass):
+            def __init__(self, instance):
+                super(RelatedManager, self).__init__()
+                self.core_filters = {'%s__exact' % related_object_descriptor.related.to_fields[0]:
+                                         getattr(instance, related_object_descriptor.related.from_fields[0])}
+                self.instance = instance
+
+            def get_queryset(self, **db_hints):
+                db = django.db.router.db_for_read(related_object_descriptor.related.to, **db_hints)
+                return django.db.models.query.QuerySet(related_object_descriptor.related.to).using(db).filter(**self.core_filters)
+
+        return RelatedManager
+
+class WeakForeignKey(django.db.models.ManyToManyField):
+    """Defines a weak, or fake, foreign key based on existing fields.
+
+    You must set
+      from_field - the field in this model to join on
+      to - the model to join to
+      to_field - the field in the other model to join on
+
+    Usefull to construct joins on non-primary keys. Note that all joins are done with equal as join condition.
+    """
+
+    def __init__(self, from_field, to, to_field, *arg, **kw):
+        django.db.models.ManyToManyField.__init__(self, to, *arg, **kw)
+        self.from_fields = [from_field]
+        self.to_fields = [to_field]
+
+    def resolve_related_fields(self):
+        if len(self.from_fields) < 1 or len(self.from_fields) != len(self.to_fields):
+            raise ValueError('Foreign Object from and to fields must be the same non-zero length')
+        related_fields = []
+        for index in range(len(self.from_fields)):
+            from_field_name = self.from_fields[index]
+            to_field_name = self.to_fields[index]
+            from_field = (self if from_field_name == 'self'
+                          else self.opts.get_field_by_name(from_field_name)[0])
+            to_field = (self.rel.to._meta.pk if to_field_name is None
+                        else self.rel.to._meta.get_field_by_name(to_field_name)[0])
+            related_fields.append((from_field, to_field))
+        return related_fields
+
+    @property
+    def related_fields(self):
+        if not hasattr(self, '_related_fields'):
+            self._related_fields = self.resolve_related_fields()
+        return self._related_fields
+
+    @property
+    def foreign_related_fields(self):
+        return tuple([rhs_field for lhs_field, rhs_field in self.related_fields])
+
+    def get_joining_columns(self, reverse_join=False):
+        source = self.reverse_related_fields if reverse_join else self.related_fields
+        return tuple([(lhs_field.column, rhs_field.column) for lhs_field, rhs_field in source])
+
+    def get_path_info(self):
+        """
+        Get path from this field to the related model.
+        """
+        opts = self.rel.to._meta
+        from_opts = self.model._meta
+        return [django.db.models.related.PathInfo(from_opts, opts, self.foreign_related_fields, self, False, True)]
+
+    def get_reverse_path_info(self):
+        """
+        Get path from the related model to this field's model.
+        """
+        opts = self.model._meta
+        from_opts = self.rel.to._meta
+        pathinfos = [django.db.models.related.PathInfo(from_opts, opts, (opts.pk,), self.rel, not self.unique, False)]
+        return pathinfos
+
+    def contribute_to_class(self, cls, name):
+        super(WeakForeignKey, self).contribute_to_class(cls, name)
+        self.field = self
+        self.to = self.rel.to
+        setattr(cls, self.name, WeakForeignKeyDescriptor(self))
+
+    def contribute_to_related_class(self, cls, related):
+        related.to = self.model
+        related.from_fields = self.to_fields
+        related.to_fields = self.from_fields
+        setattr(cls, related.get_accessor_name(), WeakForeignKeyDescriptor(related))
+
+    def validate(self, value, model_instance):
+        # Did I say this is a weak foreign key? It can't fail...
+        pass
