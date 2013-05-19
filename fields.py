@@ -18,7 +18,7 @@ except:
     pass
 import base64
 import jsonview
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _, string_concat
 
 class ModelLinkWidget(django.forms.Select):
     def render(self, name, value, attrs=None, choices=()):
@@ -124,6 +124,17 @@ class WeakForeignKeyDescriptor(object):
 
         return RelatedManager
 
+class WeakForeignKeyRel(django.db.models.fields.related.ManyToManyRel):
+    def __init__(self, to, field, *arg, **kw):
+        django.db.models.fields.related.ManyToManyRel.__init__(self, to, *arg, **kw)
+        self.field = field
+
+    def get_joining_columns(self):
+        return self.field.get_reverse_joining_columns()
+
+    def get_extra_restriction(self, where_class, alias, related_alias):
+        return None
+
 class WeakForeignKey(django.db.models.ManyToManyField):
     """Defines a weak, or fake, foreign key based on existing fields.
 
@@ -135,8 +146,35 @@ class WeakForeignKey(django.db.models.ManyToManyField):
     Usefull to construct joins on non-primary keys. Note that all joins are done with equal as join condition.
     """
 
-    def __init__(self, from_field, to, to_field, *arg, **kw):
-        django.db.models.ManyToManyField.__init__(self, to, *arg, **kw)
+    def __init__(self, from_field, to, to_field, db_constraint=True, *arg, **kwargs):
+        try:
+            assert not to._meta.abstract, "%s cannot define a relation with abstract class %s" % (self.__class__.__name__, to._meta.object_name)
+        except AttributeError:  # to._meta doesn't exist, so it must be RECURSIVE_RELATIONSHIP_CONSTANT
+            assert isinstance(to, six.string_types), "%s(%r) is invalid. First parameter to ManyToManyField must be either a model, a model name, or the string %r" % (self.__class__.__name__, to, django.db.models.fields.related.RECURSIVE_RELATIONSHIP_CONSTANT)
+            # Python 2.6 and earlier require dictionary keys to be of str type,
+            # not unicode and class names must be ASCII (in Python 2.x), so we
+            # forcibly coerce it here (breaks early if there's a problem).
+            to = str(to)
+
+        kwargs['verbose_name'] = kwargs.get('verbose_name', None)
+        kwargs['rel'] = WeakForeignKeyRel(to,
+            related_name=kwargs.pop('related_name', None),
+            limit_choices_to=kwargs.pop('limit_choices_to', None),
+            symmetrical=kwargs.pop('symmetrical', to == django.db.models.fields.related.RECURSIVE_RELATIONSHIP_CONSTANT),
+            through=kwargs.pop('through', None),
+            db_constraint=db_constraint,
+            field=self
+        )
+
+        self.db_table = kwargs.pop('db_table', None)
+        if kwargs['rel'].through is not None:
+            assert self.db_table is None, "Cannot specify a db_table if an intermediary model is used."
+
+        django.db.models.fields.related.RelatedField.__init__(self, **kwargs)
+
+        msg = _('Hold down "Control", or "Command" on a Mac, to select more than one.')
+        self.help_text = string_concat(self.help_text, ' ', msg)
+
         self.from_fields = [from_field]
         self.to_fields = [to_field]
 
@@ -164,9 +202,16 @@ class WeakForeignKey(django.db.models.ManyToManyField):
     def foreign_related_fields(self):
         return tuple([rhs_field for lhs_field, rhs_field in self.related_fields])
 
+    @property
+    def reverse_related_fields(self):
+        return [(rhs_field, lhs_field) for lhs_field, rhs_field in self.related_fields]
+
     def get_joining_columns(self, reverse_join=False):
         source = self.reverse_related_fields if reverse_join else self.related_fields
         return tuple([(lhs_field.column, rhs_field.column) for lhs_field, rhs_field in source])
+
+    def get_reverse_joining_columns(self):
+        return self.get_joining_columns(reverse_join=True)
 
     def get_path_info(self):
         """
