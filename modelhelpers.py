@@ -44,6 +44,23 @@ class SubclasModelMixin(object):
         return self
 
     @property
+    def leafclassobject(self):
+        while True:
+            subclassobject = self.subclassobject
+            if subclassobject is self:
+                return self
+            self = subclassobject
+        
+    @property
+    def rootclassobject(self):
+        while True:
+            superclassobject = self.superclassobject
+            if superclassobject is self:
+                return self
+            self = superclassobject
+        
+
+    @property
     def superclassobject(self):
         for name in self.get_model_superclass_relations().iterkeys():
             # Use try around this since Django throws DoesNotExist instead of AttributeError... Bah!
