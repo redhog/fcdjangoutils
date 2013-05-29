@@ -146,7 +146,7 @@ class WeakForeignKey(django.db.models.ManyToManyField):
     Usefull to construct joins on non-primary keys. Note that all joins are done with equal as join condition.
     """
 
-    def __init__(self, from_field, to, to_field, db_constraint=True, *arg, **kwargs):
+    def __init__(self, from_field, to, to_field, *arg, **kwargs):
         try:
             assert not to._meta.abstract, "%s cannot define a relation with abstract class %s" % (self.__class__.__name__, to._meta.object_name)
         except AttributeError:  # to._meta doesn't exist, so it must be RECURSIVE_RELATIONSHIP_CONSTANT
@@ -162,7 +162,6 @@ class WeakForeignKey(django.db.models.ManyToManyField):
             limit_choices_to=kwargs.pop('limit_choices_to', None),
             symmetrical=kwargs.pop('symmetrical', to == django.db.models.fields.related.RECURSIVE_RELATIONSHIP_CONSTANT),
             through=kwargs.pop('through', None),
-            db_constraint=db_constraint,
             field=self
         )
 
@@ -170,7 +169,7 @@ class WeakForeignKey(django.db.models.ManyToManyField):
         if kwargs['rel'].through is not None:
             assert self.db_table is None, "Cannot specify a db_table if an intermediary model is used."
 
-        django.db.models.fields.related.RelatedField.__init__(self, **kwargs)
+        super(django.db.models.ManyToManyField, self).__init__(**kwargs)
 
         msg = _('Hold down "Control", or "Command" on a Mac, to select more than one.')
         self.help_text = string_concat(self.help_text, ' ', msg)
