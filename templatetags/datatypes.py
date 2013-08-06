@@ -116,3 +116,7 @@ register.filter('sum', sum_filter)
 register.filter('separateminus', separateminus_filter)
 register.filter('aadd', aadd_filter)
 register.filter('floor', floor_filter)
+
+@register.filter
+def datatype(obj):
+    return type(obj).__name__
