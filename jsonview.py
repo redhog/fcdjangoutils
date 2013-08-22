@@ -119,7 +119,12 @@ def json_view(fn):
         if isinstance(res, (django.http.HttpResponse, django.http.StreamingHttpResponse)):
             return res
 
-        return django.http.HttpResponse(django.utils.simplejson.dumps(res, default=JsonEncodeRegistry(**getattr(request, 'json_params', {})).jsonify),
+        res = django.utils.simplejson.dumps(res, default=JsonEncodeRegistry(**getattr(request, 'json_params', {})).jsonify)
+
+        if 'callback' in request.GET:
+            res = "%s(%s);" % (request.GET['callback'], res)
+
+        return django.http.HttpResponse(res,
                                         mimetype="text/plain",
                                         status=status)
     return jsonify
