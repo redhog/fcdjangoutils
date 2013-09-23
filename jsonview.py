@@ -79,6 +79,14 @@ def modelconv(self, obj):
 def modelconv(self, obj):
     return dateutil.parser.parse(obj['value'])
 
+@JsonEncodeRegistry.register(datetime.timedelta)
+def modelconv(self, obj):
+    return {"__jsonclass__": ["datetime.timedelta"], "value": {"days":obj.days, "seconds": obj.seconds, "microseconds":obj.microseconds}}
+
+@JsonDecodeRegistry.register("datetime.timedelta")
+def modelconv(self, obj):
+    return datetime.timedelta(obj["days"], obj["seconds"], obj["microseconds"])
+
 def modeltest(self, obj):
     # GAH, Django hides the class for lazy translation strings. I HATE IT SO MUCH!!!
     return type(obj).__name__ == '__proxy__' and type(obj).__module__ =='django.utils.functional'
