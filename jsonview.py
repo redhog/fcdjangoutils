@@ -85,7 +85,7 @@ def modelconv(self, obj):
 
 @JsonDecodeRegistry.register("datetime.timedelta")
 def modelconv(self, obj):
-    return datetime.timedelta(obj["days"], obj["seconds"], obj["microseconds"])
+    return datetime.timedelta(obj['value']["days"], obj['value']["seconds"], obj['value']["microseconds"])
 
 def modeltest(self, obj):
     # GAH, Django hides the class for lazy translation strings. I HATE IT SO MUCH!!!
