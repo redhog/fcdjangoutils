@@ -87,6 +87,32 @@ def modelconv(self, obj):
 def modelconv(self, obj):
     return datetime.timedelta(obj['value']["days"], obj['value']["seconds"], obj['value']["microseconds"])
 
+class DeserializedException(Exception):
+    def __init__(self, type, description, traceback = None):
+        self.type = type
+        self.description = description
+        self.traceback = traceback
+    def __str__(self):
+        return "DeserializedException: %s\n%s\n%s" % (self.type, self.description, self.traceback or "")
+
+@JsonEncodeRegistry.register(Exception)
+def modelconv(self, obj):
+    if not isinstance(obj, DeserializedException):
+        obj = DeserializedException(
+            sys.modules[type(obj).__module__].__name__ + "." + type(obj).__name__,
+            str(obj),
+            getattr(obj, 'traceback', None))
+    value = {'type': obj.type,
+             'description': obj.description}
+    tb = getattr(obj, 'traceback', None)
+    if tb is not None:
+        value['traceback'] = tb
+    return {"__jsonclass__": ["Exception"], "value": value}
+
+@JsonDecodeRegistry.register("Exception")
+def modelconv(self, obj):
+    return DeserializedException(obj['value']['type'], obj['value']['description'], obj['value'].get('traceback', None))
+
 def modeltest(self, obj):
     # GAH, Django hides the class for lazy translation strings. I HATE IT SO MUCH!!!
     return type(obj).__name__ == '__proxy__' and type(obj).__module__ =='django.utils.functional'
