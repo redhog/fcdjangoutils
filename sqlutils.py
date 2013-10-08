@@ -29,3 +29,10 @@ def query_columns(cur, query, args = {}):
                                      if column.type_code == t])
                                    for column in cur.description)
                 if ts)
+
+def dictreader(cur):
+    cols = None
+    for row in cur:
+        if cols is None:
+            cols = [dsc[0] for dsc in cur.description]
+        yield dict(zip(cols, row))
