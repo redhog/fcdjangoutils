@@ -5,3 +5,6 @@
 *#
 *.db
 *.mo
+build
+dist
+*.egg-info
