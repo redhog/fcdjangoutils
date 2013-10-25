@@ -22,6 +22,8 @@ class SubclasModelMixin(object):
 
     @property
     def subclassobject(self):
+        if hasattr(self, '_subclassobject'):
+            return self._subclassobject
         for name in self.get_model_subclass_relations().iterkeys():
             # Use try around this since Django throws DoesNotExist instead of AttributeError... Bah!
             try:
@@ -29,11 +31,15 @@ class SubclasModelMixin(object):
             except:
                 value = None
             if value is not None:
+                self._subclassobject = value
                 return value
+        self._subclassobject = self
         return self
 
     @property
     def superclassobject(self):
+        if hasattr(self, '_superclassobject'):
+            return self._superclassobject
         for name in self.get_model_superclass_relations().iterkeys():
             # Use try around this since Django throws DoesNotExist instead of AttributeError... Bah!
             try:
@@ -41,7 +47,9 @@ class SubclasModelMixin(object):
             except:
                 value = None
             if value is not None:
+                self._superclassobject = value
                 return value
+        self._superclassobject = self
         return self
 
 class MustBeOverriddenError(Exception):
