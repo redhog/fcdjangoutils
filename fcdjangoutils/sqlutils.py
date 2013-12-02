@@ -1,5 +1,5 @@
 import contextlib
-import psycopg2
+import django.db
 
 def query_columns(cur, query, args = {}):
     cur.execute("""
@@ -13,7 +13,7 @@ def query_columns(cur, query, args = {}):
     return dict((name, ts[0])
                 for (name, ts) in ((column.name, 
                                     [name
-                                     for name, t in ((name, getattr(psycopg2, name))
+                                     for name, t in ((name, getattr(django.db.connection.Database, name, None))
                                                      for name in ("Date",
                                                                   "Time",
                                                                   "Timestamp",
