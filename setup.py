@@ -23,7 +23,7 @@ setup(
     description = "A collection of various small Django utilities.",
     keywords = "django utils",
     install_requires = [],
-    version = "0.0.3",
+    version = "0.0.4",
     author = "RedHog (Egil Moeller)",
     author_email = "egil.moller@piratpartiet.se",
     license = "GPL",

@@ -12,6 +12,7 @@ from StringIO import StringIO
 from django.db.models.query import QuerySet
 import datetime
 import dateutil
+import decimal
 import django.utils.functional
 import logging
 
@@ -86,6 +87,10 @@ def modelconv(self, obj):
 @JsonDecodeRegistry.register("datetime.timedelta")
 def modelconv(self, obj):
     return datetime.timedelta(obj['value']["days"], obj['value']["seconds"], obj['value']["microseconds"])
+
+@JsonEncodeRegistry.register(decimal.Decimal)
+def modelconv(self, obj):
+    return float(obj) # too bad we can't do any better
 
 class DeserializedException(Exception):
     def __init__(self, type, description, traceback = None):
