@@ -7,7 +7,7 @@ import django.db.models.base
 import django.core.serializers
 import django.core.serializers.base
 import django.http
-import django.utils.simplejson
+import json
 from StringIO import StringIO
 from django.db.models.query import QuerySet
 import datetime
@@ -129,11 +129,11 @@ def from_json(jsonstr, **kw):
     # Special case, but this is what you generally want...
     if not jsonstr.strip(): return None
     reg = JsonDecodeRegistry(**kw)
-    return django.utils.simplejson.loads(jsonstr, object_hook=reg.objectify)
+    return json.loads(jsonstr, object_hook=reg.objectify)
 
 def to_json(obj, **kw):
     reg = JsonEncodeRegistry(**kw)
-    return django.utils.simplejson.dumps(obj, default=reg.jsonify)
+    return json.dumps(obj, default=reg.jsonify)
 
 def json_view(fn):
     """View decorator for views that return pure JSON"""
@@ -158,7 +158,7 @@ def json_view(fn):
         if isinstance(res, (django.http.HttpResponse, django.http.StreamingHttpResponse)):
             return res
 
-        res = django.utils.simplejson.dumps(res, default=JsonEncodeRegistry(**getattr(request, 'json_params', {})).jsonify)
+        res = json.dumps(res, default=JsonEncodeRegistry(**getattr(request, 'json_params', {})).jsonify)
 
         if 'callback' in request.GET:
             res = "%s(%s);" % (request.GET['callback'], res)
@@ -207,11 +207,11 @@ def get_view(name, cls, follow_foreign_keys={}):
     def get_view(request, *arg, **kw):
         logging.info("Get " + name)
         if 'filter' in request.GET:
-            selfs = cls.objects.filter(**django.utils.simplejson.loads(request.GET['filter']))
+            selfs = cls.objects.filter(**json.loads(request.GET['filter']))
         else:
             selfs = cls.objects.all()
         if 'order_by' in request.GET:
-            selfs = selfs.order_by(*django.utils.simplejson.loads(request.GET['order_by']))
+            selfs = selfs.order_by(*json.loads(request.GET['order_by']))
 
         res = {name: selfs}
         res.update(expand_foreign_keys(selfs, follow_foreign_keys))
