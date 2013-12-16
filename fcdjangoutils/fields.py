@@ -3,7 +3,6 @@ import django.forms
 import django.utils.safestring
 import django.core.urlresolvers
 import StringIO
-from django.utils.simplejson import dumps, loads, JSONEncoder
 import dateutil.parser
 import datetime
 import django.db.models
