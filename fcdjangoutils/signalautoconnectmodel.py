@@ -22,9 +22,9 @@ def autoconnect(cls):
    
 
 class SignalAutoConnectModel(django.db.models.Model):
-    class __metaclass__(django.db.models.Model.__metaclass__):
+    class __metaclass__(type(django.db.models.Model)):
         def __init__(cls, *arg, **kw):
-            django.db.models.Model.__metaclass__.__init__(cls, *arg, **kw)
+            type(django.db.models.Model).__init__(cls, *arg, **kw)
             autoconnect(cls)
     class Meta:
         abstract = True
@@ -32,9 +32,9 @@ class SignalAutoConnectModel(django.db.models.Model):
 
 if idmapper is not None:
     class SharedMemorySignalAutoConnectModel(idmapper.models.SharedMemoryModel):
-        class __metaclass__(idmapper.models.SharedMemoryModel.__metaclass__):
+        class __metaclass__(type(idmapper.models.SharedMemoryModel)):
             def __init__(cls, *arg, **kw):
-                idmapper.models.SharedMemoryModel.__metaclass__.__init__(cls, *arg, **kw)
+                type(idmapper.models.SharedMemoryModel).__init__(cls, *arg, **kw)
                 autoconnect(cls)
         class Meta:
             abstract = True
