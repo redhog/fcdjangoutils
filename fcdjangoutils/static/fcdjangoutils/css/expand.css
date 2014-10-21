@@ -5,3 +5,7 @@
 .autohide-button.autohide-expanded:after {
   content: " v";
 }
+
+.autohide-body {
+  display: none;
+}
