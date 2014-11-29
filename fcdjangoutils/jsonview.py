@@ -15,6 +15,7 @@ import dateutil
 import decimal
 import django.utils.functional
 import logging
+import socket
 
 class JsonDecodeRegistry(object):
     registry = {}
@@ -143,7 +144,7 @@ def json_view(fn):
             res = fn(request, *arg, **kw)
             if res is None:
                 res = {}
-        except django.core.servers.basehttp.WSGIServerException:
+        except socket.error:
             raise
         except Exception, e:
             status = 500
